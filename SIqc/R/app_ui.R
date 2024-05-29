@@ -9,8 +9,32 @@ app_ui <- function(request) {
     # Leave this function for adding external resources
     golem_add_external_resources(),
     # Your application UI logic
-    fluidPage(
-      h1("SIqc")
+    bslib::page_navbar(
+      id = "navbar",
+      theme = bslib::bs_theme(bootswatch = "cosmo",
+                              version = 5,
+                              "navbar-bg" = "#2780E3",
+                              "navbar-brand-font-size" = "2rem"),
+      title = "SI qc",
+      window_title = "SI qc",
+      inverse = TRUE,
+      fluid = TRUE,
+      collapsible = TRUE,
+      lang = "it",
+
+      # Navbar items ----
+      bslib::nav_panel("Attività", value = "tasks", mod_01_plan_ui("tasks")),
+      bslib::nav_panel("Risultati", value = "results", ""),
+      bslib::nav_spacer(),
+      bslib::nav_menu("Leggimi",
+                      align = "right",
+                      bslib::nav_panel("Per iniziare", value = "readme", ""),
+                      bslib::nav_panel("Esempi", value = "examples", ""),
+                      bslib::nav_panel("Validazione", value = "tests", ""),
+                      bslib::nav_panel("Versioni", value = "news", ""),
+                      bslib::nav_panel("Struttura", value = "structure", "")
+      )
+
     )
   )
 }

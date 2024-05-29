@@ -5,5 +5,7 @@
 #' @import shiny
 #' @noRd
 app_server <- function(input, output, session) {
-  # Your application server logic
+  r <- reactiveValues()
+
+  mod_01_plan_server("tasks", r)
 }
