@@ -1,3 +1,4 @@
+/* width of factor type columns in datatable */
 td[data-type="factor"] input {
     width: 80px !important;
-} /* width of factor type columns in datatable */
+}
