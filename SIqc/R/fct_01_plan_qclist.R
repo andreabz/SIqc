@@ -27,17 +27,16 @@ table_btns <- function(x) {
 #'and remove buttons at each row.
 #'
 #' @noRd
+#' @import data.table
 add_btns <- function(df) {
-  stopifnot(is.data.frame(df))
+  stopifnot(is.data.frame(df) || data.table::is.data.table(df))
 
-  dfrows <- 1:nrow(df)
-
-  btns <- lapply(dfrows, function(x) table_btns(x)) |> unlist()
-
-  newdf <- cbind(df, btns)
-  colnames(newdf) <- c(colnames(df), "Azioni")
-
-  newdf
+  if(is.data.frame(df)) {
+    dt <- data.table::data.table(df)
+    dt[, Azioni := table_btns(.I)]
+  } else {
+    df[, Azioni := table_btns(.I)]
+  }
 }
 
 #' Prepare the dataset
@@ -48,9 +47,10 @@ add_btns <- function(df) {
 #' data_effettiva, operatore_previsto, operatore_effettivo, matrice, esito.
 #'
 #' @return a dataframe with the right class for each column.
+#' @import data.table
 prepare_tasks_summary <- function(df){
   stopifnot(is.data.frame(df))
-  stopifnot(colnames(df) == c("metodo", "attivita", "mese_previsto",
+  stopifnot(colnames(df) == c("metodo", "attivita", "anno", "mese_previsto",
                               "data_effettiva", "operatore_previsto",
                               "operatore_effettivo", "matrice", "esito"))
 
@@ -59,10 +59,199 @@ prepare_tasks_summary <- function(df){
   data <- df
   data$metodo <- as.factor(data$metodo)
   data$attivita <- as.factor(data$attivita)
+  data$anno <- as.factor(data$anno)
   data$mese_previsto <- as.factor(data$mese_previsto)
   data$data_effettiva <- as.Date(data$data_effettiva)
   data$matrice <- as.factor(data$matrice)
-  data$esito <- as.logical(data$esito)
-
+  data$esito <- ifelse(is.na(data$esito),
+                       yes = "incompleto",
+                       no = ifelse(data$esito == 1,
+                                   yes = "conforme",
+                                   no = "non conforme")
+                       ) |> as.factor()
   data
+}
+
+#' modal dialog for editing or adding a table rows
+#'
+#' @description a modal dialog with input elements for editing or adding a record.
+#' @param df a dataframe with column names metodo, attivita, mese_previsto,
+#' data_effettiva, operatore_previsto, operatore_effettivo, matrice, esito.
+#' @param edit logical. TRUE for editing and FALSE for adding a new record.
+#' @return a single row dataframe.
+modal_dialog <- function(df, edit) {
+  stopifnot(is.data.frame(df))
+  stopifnot(
+    colnames(df) == c(
+      "metodo",
+      "attivita",
+      "anno",
+      "mese_previsto",
+      "data_effettiva",
+      "operatore_previsto",
+      "operatore_effettivo",
+      "matrice",
+      "esito"
+    )
+  )
+  stopifnot(is.logical(edit))
+
+  if (edit) {
+    mylabel <- "Salva"
+    mymethod <- df$method
+    mytask <- df$attivita
+    myyear <- df$anno
+    mymonth <- df$mese_previsto
+    mydate <- df$data_effettiva
+    myplanned_operator <- df$operatore_previsto
+    myactual_operator <- df$operatore_effettivo
+    mymatrix <- df$matrice
+    myres <- df$esito
+
+  } else {
+    mylabel <- "Aggiungi"
+    mymethod <- ""
+    mytask <- ""
+    myyear <- Sys.Date() |> format("%Y") |> as.factor()
+    mymonth <- (Sys.Date() + 31) |> format("%B")
+    mydate <- Sys.Date()
+    myplanned_operator <- ""
+    myactual_operator <- ""
+    mymatrix <- ""
+    myres <- ""
+
+  }
+
+  shiny::modalDialog(
+    title = "Modifica i valori",
+    div(
+      class = "text-center",
+      div(
+        style = "display: inline-block;",
+        shiny::selectInput(
+          inputId = "method",
+          label = "Metodo",
+          choices = c("C601", "C602", "C603"),
+          selected = mymethod,
+          multiple = FALSE,
+          selectize = FALSE,
+          # bug https://github.com/rstudio/shiny/issues/3125
+          width = "200px"
+          )
+        ),
+      div(
+        style = "display: inline-block;",
+        shiny::selectInput(
+          inputId = "task",
+          label = "Attvità",
+          choices = c("ripetibilità", "giustezza", "pt"),
+          selected = mytask,
+          multiple = FALSE,
+          selectize = FALSE,
+          # bug https://github.com/rstudio/shiny/issues/3125
+          width = "200px"
+          )
+        ),
+      div(
+        style = "display: inline-block;",
+        shiny::selectInput(
+          inputId = "year",
+          label = "Anno",
+          choices = 2024:2034 |> as.factor(),
+          selected = myyear,
+          multiple = FALSE,
+          selectize = FALSE,
+          # bug https://github.com/rstudio/shiny/issues/3125
+          width = "200px"
+          )
+        ),
+      div(
+        style = "display: inline-block;",
+        shiny::selectInput(
+          inputId = "month",
+          label = "Mese previsto",
+          choices = c("non previsto", format(ISOdate(2000, 1:12, 1), "%B")),
+          selected = mymonth,
+          multiple = FALSE,
+          selectize = FALSE,
+          # bug https://github.com/rstudio/shiny/issues/3125
+          width = "200px"
+          )
+        ),
+      div(
+          style = "display: inline-block;",
+          shiny::dateInput(
+            inputId = "date",
+            label = "Data effettiva",
+            min = "2020-01-01",
+            max = "2060-12-31",
+            startview = "month",
+            language = "it",
+            format = "yyyy-mm-dd",
+            value = mydate,
+            daysofweekdisabled = c(0, 6),
+            weekstart = 1,
+            width = "200px"
+            )
+          ),
+      div(
+          style = "display: inline-block;",
+          shiny::textInput(
+            inputId = "planned_operator",
+            label = "Operatore previsto",
+            value = myplanned_operator,
+            width = "200px"
+            )
+          ),
+      div(
+          style = "display: inline-block;",
+          shiny::textInput(
+            inputId = "actual_operator",
+            label = "Operatore effettivo",
+            value = myactual_operator,
+            width = "200px"
+            )
+          ),
+        div(
+          style = "display: inline-block;",
+          shiny::selectInput(
+            inputId = "matrix",
+            label = "Matrice",
+            choices = c("terreno", "acqua sotterranea", "acqua superficiale"),
+            selected = mymatrix,
+            multiple = FALSE,
+            selectize = FALSE,
+            # bug https://github.com/rstudio/shiny/issues/3125
+            width = "200px"
+            )
+          )
+      ),
+    size = "m",
+    easyClose = TRUE,
+    footer = div(
+      class = "d-flex bd-highlight mb-3 container",
+      div(class = "me-auto bd-highlight",
+      shiny::actionButton(
+        inputId = "add_data",
+        label = "Aggiungi i risultati",
+        icon = shiny::icon("vials")
+      )
+      ),
+      div(class = "bd-highlight",
+      shiny::actionButton(
+        inputId = "final_edit",
+        label = mylabel,
+        icon = shiny::icon("edit"),
+        class = "btn-info"
+      )
+      ),
+      div(class = "bd-highlight",
+      shiny::actionButton(
+        inputId = "dismiss_modal",
+        label = "Chiudi",
+        class = "btn-danger"
+      )
+      )
+    )
+  ) |> shiny::showModal()
 }

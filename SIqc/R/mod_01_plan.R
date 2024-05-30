@@ -40,27 +40,29 @@ mod_01_plan_ui <- function(id){
 #' @import shiny
 #' @importFrom DT renderDT dataTableProxy replaceData JS
 #' @importFrom stringi stri_detect_regex
-mod_01_plan_server <- function(id, r){
+mod_01_plan_server <- function(id, r_global){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
     input_df <- read.csv2(here::here("data-raw/registro.csv")) |> prepare_tasks_summary()
+    #input_df <- nycflights13::flights[, 1:10]
     ##### add the action buttons ----
     df <- add_btns(input_df)
 
-    rv <- shiny::reactiveValues(
+    r_local <- shiny::reactiveValues(
       df = df,
+      edited_row = NULL,
       dt_row = NULL,
       add_or_edit = NULL,
       edit_button = NULL,
-      keep_track_id = nrow(mtcars) + 1
+      keep_track_id = nrow(df) + 1
     )
 
     ###### tasks table -----
     output$dt_table <- DT::renderDT(
-      rv$df,
+      r_local$df,
       filter = list(position = 'top', clear = TRUE),
-      colnames = c("Metodo", "Attività", "Mese previsto", "Data effettiva",
+      colnames = c("Metodo", "Attività", "Anno", "Mese previsto", "Data effettiva",
                    "Operatore previsto", "Operatore effettivo", "Matrice",
                    "Esito", "Azioni"),
       selection = "none",
@@ -96,8 +98,8 @@ mod_01_plan_server <- function(id, r){
     )
 
     proxy <- DT::dataTableProxy("dt_table")
-    shiny::observe({
-      DT::replaceData(proxy, rv$df, resetPaging = FALSE, rownames = FALSE)
+    shiny::observeEvent(r_local$df, {
+      DT::replaceData(proxy, r_local$df, resetPaging = FALSE, rownames = FALSE)
     })
 
     ##### delete a row ----
@@ -106,9 +108,24 @@ mod_01_plan_server <- function(id, r){
       req(grepl("delete", input$current_id))
 
       # stringi functions are much faster than grepl
-      rv$dt_row <- which(stringi::stri_detect_regex(rv$df$Azioni, paste0("\\b", input$current_id, "\\b")))
-      rv$df <- rv$df[-rv$dt_row, ]
-      print(str(rv$df))
+      r_local$dt_row <- which(stringi::stri_detect_regex(r_local$df$Azioni,
+                                                         paste0("\\b", input$current_id, "\\b")))
+      r_local$df <- r_local$df[-r_local$dt_row, ]
+    })
+
+    ##### edit a row ----
+    shiny::observeEvent(input$current_id, {
+      req(!is.null(input$current_id))
+      req(grepl("edit", input$current_id))
+
+      # stringi functions are much faster than grepl
+      r_local$dt_row <- which(stringi::stri_detect_regex(r_local$df$Azioni,
+                                                         paste0("\\b", input$current_id, "\\b")))
+
+      r_local$edited_row <- r_local$df[r_local$dt_row, .SD, .SDcols = !c("Azioni")]
+      print(r_local$edited_row)
+      modal_dialog(r_local$edited_row, edit = TRUE)
+
     })
 
 
