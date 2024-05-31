@@ -1,12 +1,12 @@
-metodo;attivita;anno;mese_previsto;data_effettiva;operatore_previsto;operatore_effettivo;matrice;esito
-C601;ripetibilità;2024;aprile;2024-04-29;Bazzano;Bazzano;terreno;1
-C601;giustezza;2024;aprile;2024-04-29;Bazzano;Bazzano;terreno;1
-C601;pt;2024;aprile;2024-04-29;Bazzano;Bazzano;terreno;1
-C601;ripetibilità;2024;maggio;2024-05-15;Magherini;Magherini;terreno;1
-C601;giustezza;2024;maggio;2024-05-15;Magherini;Magherini;terreno;1
-C601;ripetibilità;2024;novembre;;Risso;;terreno;
-C601;giustezza;2024;novembre;;Risso;;terreno;
-C601;ripetibilità;2024;non previsto;2024-03-25;non previsto;Magherini, Risso;terreno;1
-C601;giustezza;2024;non previsto;2024-03-25;non previsto;Magherini, Risso;terreno;1
-C601;ripetibilità;2024;non previsto;2024-03-25;non previsto;Magherini, Risso;terreno;1
-C601;giustezza;2024;non previsto;2024-03-25;non previsto;Magherini, Risso;terreno;1
+id_metodo;id_attivita;id_anno;id_mese;id_matrice;data_effettiva;operatore_previsto;operatore_effettivo;esito
+1;1;5;4;55;2024-04-29;Bazzano;Bazzano;1
+1;2;5;4;55;2024-04-29;Bazzano;Bazzano;1
+1;3;5;4;55;2024-04-29;Bazzano;Bazzano;1
+1;1;5;5;55;2024-05-15;Magherini;Magherini;1
+1;2;5;5;55;2024-05-15;Magherini;Magherini;1
+1;1;5;11;55;;Risso;;
+1;2;5;11;55;;Risso;;
+1;1;5;13;55;2024-03-25;non previsto;Magherini, Risso;1
+1;2;5;13;55;2024-03-25;non previsto;Magherini, Risso;1
+1;1;5;13;55;2024-03-25;non previsto;Magherini, Risso;1
+1;2;5;13;55;2024-03-25;non previsto;Magherini, Risso;1
