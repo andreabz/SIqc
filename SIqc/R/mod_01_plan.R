@@ -44,7 +44,7 @@ mod_01_plan_server <- function(id, r_global){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
-    input_df <- read.csv2(here::here("data-raw/registro.csv")) |> prepare_tasks_summary()
+    input_df <- read.csv2(here::here("data/registro.csv")) |> prepare_tasks_summary()
     #input_df <- nycflights13::flights[, 1:10]
     ##### add the action buttons ----
     df <- add_btns(input_df)
