@@ -269,6 +269,7 @@ DBI::dbExecute(conn, "INSERT INTO registro
                          INNER JOIN matrice ON plan.id_matrice = matrice.id_matrice;")
 DBI::dbGetQuery(conn, "SELECT * FROM registro;")
 
+# get planned tasks ----
 DBI::dbGetQuery(conn, "SELECT metodo,
                               attivita,
                               anno,
@@ -288,6 +289,7 @@ DBI::dbGetQuery(conn, "SELECT metodo,
                           ) AS res
                           ON plan.id_plan = res.id_plan;")
 
+# get planned task and sample id ----
 DBI::dbGetQuery(conn, "SELECT metodo,
                               attivita,
                               anno,
@@ -311,6 +313,7 @@ DBI::dbGetQuery(conn, "SELECT metodo,
                           ) AS b
                           ON plan.id_campione2 = b.id_campione;")
 
+# get planned tasks and results ----
 DBI::dbGetQuery(conn, "SELECT metodo,
                               attivita,
                               anno,
@@ -333,7 +336,8 @@ DBI::dbGetQuery(conn, "SELECT metodo,
                          LEFT JOIN (
                           SELECT id_campione, parametro, valore FROM risultati
                           ) AS b
-                          ON plan.id_campione2 = b.id_campione;")
+                          ON plan.id_campione2 = b.id_campione
+                          AND a.parametro = b.parametro;")
 
 DBI::dbExecute(conn, "DROP TABLE risultati_tmp")
 

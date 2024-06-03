@@ -23,7 +23,7 @@ table_btns <- function(x) {
 #' @description add edit and remove buttons at each rows of a DT table.
 #'
 #' @param df a dataframe to be visualised as DT table
-#' @return a data.frame with a new column 'Azioni' with HTML code for edit
+#' @return a data.frame with a new column 'actions' with HTML code for edit
 #'and remove buttons at each row.
 #'
 #' @noRd
@@ -33,9 +33,9 @@ add_btns <- function(df) {
 
   if(is.data.frame(df)) {
     dt <- data.table::data.table(df)
-    dt[, Azioni := table_btns(.I)]
+    dt[, actions := table_btns(.I)]
   } else {
-    df[, Azioni := table_btns(.I)]
+    df[, actions := table_btns(.I)]
   }
 }
 
@@ -78,8 +78,9 @@ prepare_tasks_summary <- function(df){
 #' @param df a dataframe with column names metodo, attivita, mese_previsto,
 #' data_effettiva, operatore_previsto, operatore_effettivo, matrice, esito.
 #' @param edit logical. TRUE for editing and FALSE for adding a new record.
+#' @param conn a DBI::dbConnect valid connection.
 #' @return a single row dataframe.
-modal_dialog <- function(df, edit) {
+modal_dialog <- function(df, edit, conn) {
   stopifnot(is.data.frame(df))
   stopifnot(
     colnames(df) == c(
@@ -131,7 +132,7 @@ modal_dialog <- function(df, edit) {
         shiny::selectInput(
           inputId = "method",
           label = "Metodo",
-          choices = c("C601", "C602", "C603"),
+          choices = sql_get_list(conn, "metodo"),
           selected = mymethod,
           multiple = FALSE,
           selectize = FALSE,
@@ -144,7 +145,7 @@ modal_dialog <- function(df, edit) {
         shiny::selectInput(
           inputId = "task",
           label = "Attvità",
-          choices = c("ripetibilità", "giustezza", "pt"),
+          choices = sql_get_list(conn, "attivita"),
           selected = mytask,
           multiple = FALSE,
           selectize = FALSE,
@@ -157,7 +158,7 @@ modal_dialog <- function(df, edit) {
         shiny::selectInput(
           inputId = "year",
           label = "Anno",
-          choices = 2024:2034 |> as.factor(),
+          choices = sql_get_list(conn, "anno"),
           selected = myyear,
           multiple = FALSE,
           selectize = FALSE,
@@ -170,7 +171,7 @@ modal_dialog <- function(df, edit) {
         shiny::selectInput(
           inputId = "month",
           label = "Mese previsto",
-          choices = c("non previsto", format(ISOdate(2000, 1:12, 1), "%B")),
+          choices = sql_get_list(conn, "mese"),
           selected = mymonth,
           multiple = FALSE,
           selectize = FALSE,
@@ -217,7 +218,7 @@ modal_dialog <- function(df, edit) {
           shiny::selectInput(
             inputId = "matrix",
             label = "Matrice",
-            choices = c("terreno", "acqua sotterranea", "acqua superficiale"),
+            choices = sql_get_list(conn, "matrice"),
             selected = mymatrix,
             multiple = FALSE,
             selectize = FALSE,

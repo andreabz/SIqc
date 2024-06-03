@@ -44,8 +44,12 @@ mod_01_plan_server <- function(id, r_global){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
-    input_df <- read.csv2(here::here("data/registro.csv")) |> prepare_tasks_summary()
-    #input_df <- nycflights13::flights[, 1:10]
+    conn <- DBI::dbConnect(RSQLite::SQLite(),
+                           "./data/sqlite_test.db",
+                           extended_types = TRUE)
+
+    input_df <- sql_get_task_summary(conn)
+
     ##### add the action buttons ----
     df <- add_btns(input_df)
 
@@ -108,7 +112,7 @@ mod_01_plan_server <- function(id, r_global){
       req(grepl("delete", input$current_id))
 
       # stringi functions are much faster than grepl
-      r_local$dt_row <- which(stringi::stri_detect_regex(r_local$df$Azioni,
+      r_local$dt_row <- which(stringi::stri_detect_regex(r_local$df$actions,
                                                          paste0("\\b", input$current_id, "\\b")))
       r_local$df <- r_local$df[-r_local$dt_row, ]
     })
@@ -119,12 +123,12 @@ mod_01_plan_server <- function(id, r_global){
       req(grepl("edit", input$current_id))
 
       # stringi functions are much faster than grepl
-      r_local$dt_row <- which(stringi::stri_detect_regex(r_local$df$Azioni,
+      r_local$dt_row <- which(stringi::stri_detect_regex(r_local$df$actions,
                                                          paste0("\\b", input$current_id, "\\b")))
 
-      r_local$edited_row <- r_local$df[r_local$dt_row, .SD, .SDcols = !c("Azioni")]
+      r_local$edited_row <- r_local$df[r_local$dt_row, .SD, .SDcols = !c("actions")]
       print(r_local$edited_row)
-      modal_dialog(r_local$edited_row, edit = TRUE)
+      modal_dialog(r_local$edited_row, edit = TRUE, conn = conn)
 
     })
 

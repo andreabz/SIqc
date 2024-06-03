@@ -26,6 +26,7 @@ golem::add_module(name = "02_results", with_test = TRUE) # Name of the module
 ## Add helper functions ----
 ## Creates fct_* and utils_*
 golem::add_fct("01_plan_qclist", with_test = TRUE)
+golem::add_fct("sql_queries", with_test = TRUE)
 golem::add_utils("helpers", with_test = TRUE)
 
 ## External resources
