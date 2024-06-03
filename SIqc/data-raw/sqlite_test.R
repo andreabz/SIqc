@@ -17,23 +17,6 @@
 #' @importFrom DBI dbConnect dbWriteTable dbGetQuery dbExecute
 conn <- DBI::dbConnect(RSQLite::SQLite(), "./data/sqlite_test.db", extended_types = TRUE)
 
-#### plan table ----
-plan_data <- read.csv2(here::here("data/registro.csv"))
-DBI::dbExecute(conn, "CREATE TABLE plan(
-                id_plan integer PRIMARY KEY AUTOINCREMENT,
-                id_metodo integer NOT NULL,
-                id_attivita integer NOT NULL,
-                id_anno integer NOT NULL,
-                id_mese text NOT NULL,
-                id_matrice integer NOT NULL,
-                data_effettiva date,
-                operatore_previsto text NOT NULL,
-                operatore_effettivo text,
-                esito integer
-                );")
-DBI::dbWriteTable(conn, "plan", plan_data, append = TRUE)
-DBI::dbGetQuery(conn, "SELECT * FROM plan;")
-
 #### attivita table ----
 attivita_data <- data.frame(attivita = c("ripetibilità", "giustezza", "pt"))
 DBI::dbExecute(conn, "CREATE TABLE attivita(
@@ -45,10 +28,10 @@ DBI::dbGetQuery(conn, "SELECT * FROM attivita;")
 
 #### mese table ----
 mese_data <- data.frame(mese = c("gennaio", "febbraio", "marzo",
-               "aprile", "maggio", "giugno",
-               "luglio", "agosto", "settembre",
-               "ottobre", "novembre", "dicembre",
-               "non previsto"))
+                                 "aprile", "maggio", "giugno",
+                                 "luglio", "agosto", "settembre",
+                                 "ottobre", "novembre", "dicembre",
+                                 "non previsto"))
 DBI::dbExecute(conn, "CREATE TABLE mese(
                 id_mese integer PRIMARY KEY AUTOINCREMENT,
                 mese text NOT NULL
@@ -74,13 +57,60 @@ DBI::dbExecute(conn, "CREATE TABLE metodo(
 DBI::dbWriteTable(conn, "metodo", metodo_data, append = TRUE)
 DBI::dbGetQuery(conn, "SELECT * FROM metodo;")
 
+#### plan table ----
+plan_data <- read.csv2(here::here("data/registro.csv"))
+DBI::dbWriteTable(conn, "plan_tmp", plan_data, append = TRUE)
+DBI::dbExecute(conn, "CREATE TABLE plan(
+                id_plan integer PRIMARY KEY AUTOINCREMENT,
+                id_metodo integer NOT NULL,
+                id_attivita integer NOT NULL,
+                id_anno integer NOT NULL,
+                id_mese text NOT NULL,
+                id_matrice integer NOT NULL,
+                id_campione1 integer,
+                id_campione2 integer,
+                operatore_previsto text NOT NULL,
+                esito integer
+                );")
+DBI::dbExecute(conn,
+               "INSERT INTO plan(
+                id_metodo,
+                id_attivita,
+                id_anno,
+                id_mese,
+                id_matrice,
+                id_campione1,
+                id_campione2,
+                operatore_previsto,
+                esito)
+                SELECT
+                  plan_tmp.id_metodo,
+                  plan_tmp.id_attivita,
+                  plan_tmp.id_anno,
+                  plan_tmp.id_mese,
+                  plan_tmp.id_matrice,
+                  a.id_campione AS id_campione1,
+                  b.id_campione AS id_campione2,
+                  plan_tmp.data_effettiva,
+                  plan_tmp.operatore_previsto,
+                  plan_tmp.operatore_effettivo,
+                  plan_tmp.esito
+                 FROM plan_tmp
+                  LEFT JOIN (SELECT id_campione, campione FROM campione) AS a
+                    ON plan_tmp.campione1 = a.campione
+                  LEFT JOIN (SELECT id_campione, campione FROM campione) AS b
+                    ON plan_tmp.campione2 = b.campione;")
+DBI::dbExecute(conn, "DROP TABLE plan_tmp;")
+
 #### campione table ----
-campione_data <- data.frame(id_campione = c(5635, 5679, 7597, 10090, 5636,
-                                           5680, 10091, 563500, 567900, 1009000,
-                                           7598, 759700, 759701),
-                           id_metodo = rep(1, 13))
+risultati_data <- read.csv(here::here("data/risultati.csv"))
+DBI::dbWriteTable(conn, "risultati_tmp", risultati_data, append = TRUE)
+campioni <- DBI::dbGetQuery(conn, "SELECT DISTINCT campione FROM risultati_tmp")
+campione_data <- data.frame(campione = campioni,
+                            id_metodo = rep(1, 13))
 DBI::dbExecute(conn, "CREATE TABLE campione(
-                id_campione integer PRIMARY KEY,
+                id_campione integer PRIMARY KEY AUTOINCREMENT,
+                campione text NOT NULL,
                 id_metodo integer NOT NULL
                 );")
 DBI::dbWriteTable(conn, "campione", campione_data, append = TRUE)
@@ -98,62 +128,62 @@ DBI::dbGetQuery(conn, "SELECT * FROM tipo;")
 
 #### matrice table ----
 matrice_data <- data.frame(matrice =
-                c("acqua incognita",
-                  "acque",
-                  "acque d.c.u.",
-                  "acque d.c.u. pozzi (sotterranee ad uso potabile)",
-                  "acque di condotta fognaria",
-                  "acque di mare",
-                  "acque di piezometro",
-                  "acque di pioggia",
-                  "acque di scarico",
-                  "acque di transizione",
-                  "acque dolci di piscina",
-                  "acque marine di piscina",
-                  "acque minerali",
-                  "acque sotterranee",
-                  "acque superficiali",
-                  "acque superficiali ad uso potabile",
-                  "acque termali",
-                  "alimenti",
-                  "aria ambiente",
-                  "aria emissioni convogliate",
-                  "bigiotteria",
-                  "biota",
-                  "carboni",
-                  "cemento",
-                  "ceneri",
-                  "colla",
-                  "cosmetici",
-                  "derivati petroliferi",
-                  "estratto",
-                  "fall out",
-                  "fanghi dei depuratori",
-                  "fibra tessile",
-                  "gas interstiziali",
-                  "incensi",
-                  "inerti",
-                  "matrice liquida",
-                  "matrice solida",
-                  "nastro adesivo",
-                  "percolato di discarica",
-                  "pietre",
-                  "piumini",
-                  "prodotti per l'igiene personale",
-                  "prodotto petrolifero",
-                  "reticelle lampade a gas",
-                  "rifiuti",
-                  "rifiuto arpal terre",
-                  "scarichi ospedalieri",
-                  "sedimenti",
-                  "soluzioni dialisi",
-                  "sorgente radioattiva liquida",
-                  "sorgente radioattiva solida",
-                  "sorgenti radioattive",
-                  "stupefacenti",
-                  "superfici",
-                  "terreno",
-                  "varie")
+                             c("acqua incognita",
+                               "acque",
+                               "acque d.c.u.",
+                               "acque d.c.u. pozzi (sotterranee ad uso potabile)",
+                               "acque di condotta fognaria",
+                               "acque di mare",
+                               "acque di piezometro",
+                               "acque di pioggia",
+                               "acque di scarico",
+                               "acque di transizione",
+                               "acque dolci di piscina",
+                               "acque marine di piscina",
+                               "acque minerali",
+                               "acque sotterranee",
+                               "acque superficiali",
+                               "acque superficiali ad uso potabile",
+                               "acque termali",
+                               "alimenti",
+                               "aria ambiente",
+                               "aria emissioni convogliate",
+                               "bigiotteria",
+                               "biota",
+                               "carboni",
+                               "cemento",
+                               "ceneri",
+                               "colla",
+                               "cosmetici",
+                               "derivati petroliferi",
+                               "estratto",
+                               "fall out",
+                               "fanghi dei depuratori",
+                               "fibra tessile",
+                               "gas interstiziali",
+                               "incensi",
+                               "inerti",
+                               "matrice liquida",
+                               "matrice solida",
+                               "nastro adesivo",
+                               "percolato di discarica",
+                               "pietre",
+                               "piumini",
+                               "prodotti per l'igiene personale",
+                               "prodotto petrolifero",
+                               "reticelle lampade a gas",
+                               "rifiuti",
+                               "rifiuto arpal terre",
+                               "scarichi ospedalieri",
+                               "sedimenti",
+                               "soluzioni dialisi",
+                               "sorgente radioattiva liquida",
+                               "sorgente radioattiva solida",
+                               "sorgenti radioattive",
+                               "stupefacenti",
+                               "superfici",
+                               "terreno",
+                               "varie")
 )
 
 DBI::dbExecute(conn, "CREATE TABLE matrice(
@@ -162,6 +192,52 @@ DBI::dbExecute(conn, "CREATE TABLE matrice(
                 );")
 DBI::dbWriteTable(conn, "matrice", matrice_data, append = TRUE)
 DBI::dbGetQuery(conn, "SELECT * FROM matrice;")
+
+#### risultati table ----
+DBI::dbExecute(conn, "CREATE TABLE risultati(
+                id_risultati integer PRIMARY KEY AUTOINCREMENT,
+                id_plan integer NOT NULL,
+                id_tipo integer NOT NULL,
+                id_matrice integer NOT NULL,
+                id_campione integer NOT NULL,
+                data_effettiva date NOT NULL,
+                operatore_effettivo text NOT NULL,
+                parametro text NOT NULL,
+                udm text NOT NULL,
+                valore real NOT NULL,
+                incertezza real,
+                argomento text NOT NULL
+                );")
+
+DBI::dbExecute(conn,
+               "INSERT INTO risultati(
+                  id_plan,
+                  id_tipo,
+                  id_matrice,
+                  id_campione,
+                  data_effettiva,
+                  operatore_effettivo,
+                  parametro,
+                  udm,
+                  valore,
+                  incertezza,
+                  argomento)
+                SELECT
+                  risultati_tmp.id_plan,
+                  risultati_tmp.id_tipo,
+                  matrice.id_matrice,
+                  campione.id_campione,
+                  risultati_tmp.data_effettiva,
+                  risultati_tmp.operatore_effettivo,
+                  risultati_tmp.parametro,
+                  risultati_tmp.udm,
+                  risultati_tmp.valore,
+                  risultati_tmp.incertezza,
+                  risultati_tmp.argomento
+                FROM risultati_tmp
+                  INNER JOIN matrice ON risultati_tmp.matrice = matrice.matrice
+                  INNER JOIN campione ON risultati_tmp.campione = campione.campione;")
+
 
 #### registro table ----
 DBI::dbExecute(conn, "CREATE TABLE registro(
@@ -193,24 +269,73 @@ DBI::dbExecute(conn, "INSERT INTO registro
                          INNER JOIN matrice ON plan.id_matrice = matrice.id_matrice;")
 DBI::dbGetQuery(conn, "SELECT * FROM registro;")
 
-#### risultati table ----
-risultati_data <- read.csv(here::here("data/risultati.csv"))
-DBI::dbExecute(conn, "CREATE TABLE risultati(
-                id_risultati integer PRIMARY KEY AUTOINCREMENT,
-                id_plan integer NOT NULL,
-                id_tipo integer NOT NULL,
-                id_matrice integer NOT NULL,
-                data_effettiva date NOT NULL,
-                id_campione integer NOT NULL,
-                operatore_effettivo text NOT NULL,
-                parametro text NOT NULL,
-                udm text NOT NULL,
-                valore real NOT NULL,
-                incertezza real,
-                argomento text NOT NULL
-                );")
-DBI::dbWriteTable(conn, "risultati", risultati_data, append = TRUE)
-DBI::dbGetQuery(conn, "SELECT * FROM risultati;")
+DBI::dbGetQuery(conn, "SELECT metodo,
+                              attivita,
+                              anno,
+                              mese AS mese_previsto,
+                              res.data_effettiva,
+                              operatore_previsto,
+                              res.operatore_effettivo,
+                              matrice,
+                              esito FROM plan
+                         INNER JOIN metodo ON plan.id_metodo = metodo.id_metodo
+                         INNER JOIN attivita ON plan.id_attivita = attivita.id_attivita
+                         INNER JOIN anno ON plan.id_anno = anno.id_anno
+                         INNER JOIN mese ON plan.id_mese = mese.id_mese
+                         INNER JOIN matrice ON plan.id_matrice = matrice.id_matrice
+                         LEFT JOIN (
+                          SELECT DISTINCT id_plan, data_effettiva, operatore_effettivo FROM risultati
+                          ) AS res
+                          ON plan.id_plan = res.id_plan;")
+
+DBI::dbGetQuery(conn, "SELECT metodo,
+                              attivita,
+                              anno,
+                              mese AS mese_previsto,
+                              operatore_previsto,
+                              a.campione AS campione1,
+                              b.campione AS campione2,
+                              matrice,
+                              esito FROM plan
+                         INNER JOIN metodo ON plan.id_metodo = metodo.id_metodo
+                         INNER JOIN attivita ON plan.id_attivita = attivita.id_attivita
+                         INNER JOIN anno ON plan.id_anno = anno.id_anno
+                         INNER JOIN mese ON plan.id_mese = mese.id_mese
+                         INNER JOIN matrice ON plan.id_matrice = matrice.id_matrice
+                         LEFT JOIN (
+                          SELECT id_campione, campione FROM campione
+                          ) AS a
+                          ON plan.id_campione1 = a.id_campione
+                         LEFT JOIN (
+                          SELECT id_campione, campione FROM campione
+                          ) AS b
+                          ON plan.id_campione2 = b.id_campione;")
+
+DBI::dbGetQuery(conn, "SELECT metodo,
+                              attivita,
+                              anno,
+                              mese AS mese_previsto,
+                              operatore_previsto,
+                              a.parametro AS parametro,
+                              a.valore AS campione1,
+                              b.valore AS campione2,
+                              matrice,
+                              esito FROM plan
+                         INNER JOIN metodo ON plan.id_metodo = metodo.id_metodo
+                         INNER JOIN attivita ON plan.id_attivita = attivita.id_attivita
+                         INNER JOIN anno ON plan.id_anno = anno.id_anno
+                         INNER JOIN mese ON plan.id_mese = mese.id_mese
+                         INNER JOIN matrice ON plan.id_matrice = matrice.id_matrice
+                         LEFT JOIN (
+                          SELECT id_campione, parametro, valore FROM risultati
+                          ) AS a
+                          ON plan.id_campione1 = a.id_campione
+                         LEFT JOIN (
+                          SELECT id_campione, parametro, valore FROM risultati
+                          ) AS b
+                          ON plan.id_campione2 = b.id_campione;")
+
+DBI::dbExecute(conn, "DROP TABLE risultati_tmp")
 
 #### TODO ####
 ## usare id_plan per unire risultati e plan

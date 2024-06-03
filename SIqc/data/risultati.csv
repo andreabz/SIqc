@@ -1,118 +1,118 @@
-id_plan,id_tipo,id_matrice,data_effettiva,id_campione,operatore_effettivo,parametro,udm,valore,incertezza,argomento
-8,2,55,2024-03-25,5635,"Magherini, Risso",pirene,mg/kg,0.093,,QC
-8,2,55,2024-03-25,5635,"Magherini, Risso",benzo(a)antracene,mg/kg,0.085,,QC
-8,2,55,2024-03-25,5635,"Magherini, Risso",crisene,mg/kg,0.114,,QC
-8,2,55,2024-03-25,5635,"Magherini, Risso",benzo(b+j)fluorantene,mg/kg,0.083,,QC
-8,2,55,2024-03-25,5635,"Magherini, Risso",benzo(k)fluorantene,mg/kg,0.106,,QC
-8,2,55,2024-03-25,5635,"Magherini, Risso",benzo(a)pirene,mg/kg,0.090,,QC
-8,2,55,2024-03-25,5635,"Magherini, Risso","indeno(1,2,3-c,d)pirene",mg/kg,0.092,,QC
-8,2,55,2024-03-25,5635,"Magherini, Risso","dibenzo(a,h)antracene",mg/kg,0.106,,QC
-8,2,55,2024-03-25,5635,"Magherini, Risso","benzo(g,h,i)perilene",mg/kg,0.104,,QC
-10,2,55,2024-03-25,5679,"Magherini, Risso",pirene,mg/kg,0.093,,QC
-10,2,55,2024-03-25,5679,"Magherini, Risso",benzo(a)antracene,mg/kg,0.083,,QC
-10,2,55,2024-03-25,5679,"Magherini, Risso",crisene,mg/kg,0.111,,QC
-10,2,55,2024-03-25,5679,"Magherini, Risso",benzo(b+j)fluorantene,mg/kg,0.079,,QC
-10,2,55,2024-03-25,5679,"Magherini, Risso",benzo(k)fluorantene,mg/kg,0.101,,QC
-10,2,55,2024-03-25,5679,"Magherini, Risso",benzo(a)pirene,mg/kg,0.091,,QC
-10,2,55,2024-03-25,5679,"Magherini, Risso","indeno(1,2,3-c,d)pirene",mg/kg,0.083,,QC
-10,2,55,2024-03-25,5679,"Magherini, Risso","dibenzo(a,h)antracene",mg/kg,0.105,,QC
-10,2,55,2024-03-25,5679,"Magherini, Risso","benzo(g,h,i)perilene",mg/kg,0.101,,QC
-1,3,55,2024-04-29,7597,Bazzano,pirene,mg/kg,1.510,,QC
-1,3,55,2024-04-29,7597,Bazzano,benzo(a)antracene,mg/kg,0.5155,,QC
-1,3,55,2024-04-29,7597,Bazzano,crisene,mg/kg,0.3227,,QC
-1,3,55,2024-04-29,7597,Bazzano,benzo(b+j)fluorantene,mg/kg,0.3117,,QC
-1,3,55,2024-04-29,7597,Bazzano,benzo(k)fluorantene,mg/kg,0.1004,,QC
-1,3,55,2024-04-29,7597,Bazzano,benzo(a)pirene,mg/kg,0.2056,,QC
-1,3,55,2024-04-29,7597,Bazzano,"indeno(1,2,3-c,d)pirene",mg/kg,0.119,,QC
-1,3,55,2024-04-29,7597,Bazzano,"dibenzo(a,h)antracene",mg/kg,0.0443,,QC
-1,3,55,2024-04-29,7597,Bazzano,"benzo(g,h,i)perilene",mg/kg,0.0951,,QC
-4,2,55,2024-05-15,10090,Magherini,pirene,mg/kg,0.088,,QC
-4,2,55,2024-05-15,10090,Magherini,benzo(a)antracene,mg/kg,0.086,,QC
-4,2,55,2024-05-15,10090,Magherini,crisene,mg/kg,0.084,,QC
-4,2,55,2024-05-15,10090,Magherini,benzo(b+j)fluorantene,mg/kg,0.093,,QC
-4,2,55,2024-05-15,10090,Magherini,benzo(k)fluorantene,mg/kg,0.089,,QC
-4,2,55,2024-05-15,10090,Magherini,benzo(a)pirene,mg/kg,0.096,,QC
-4,2,55,2024-05-15,10090,Magherini,"indeno(1,2,3-c,d)pirene",mg/kg,0.102,,QC
-4,2,55,2024-05-15,10090,Magherini,"dibenzo(a,h)antracene",mg/kg,0.089,,QC
-4,2,55,2024-05-15,10090,Magherini,"benzo(g,h,i)perilene",mg/kg,0.104,,QC
-8,2,55,2024-03-25,5636,"Magherini, Risso",pirene,mg/kg,0.102,,QC
-8,2,55,2024-03-25,5636,"Magherini, Risso",benzo(a)antracene,mg/kg,0.093,,QC
-8,2,55,2024-03-25,5636,"Magherini, Risso",crisene,mg/kg,0.122,,QC
-8,2,55,2024-03-25,5636,"Magherini, Risso",benzo(b+j)fluorantene,mg/kg,0.119,,QC
-8,2,55,2024-03-25,5636,"Magherini, Risso",benzo(k)fluorantene,mg/kg,0.098,,QC
-8,2,55,2024-03-25,5636,"Magherini, Risso",benzo(a)pirene,mg/kg,0.098,,QC
-8,2,55,2024-03-25,5636,"Magherini, Risso","indeno(1,2,3-c,d)pirene",mg/kg,0.094,,QC
-8,2,55,2024-03-25,5636,"Magherini, Risso","dibenzo(a,h)antracene",mg/kg,0.104,,QC
-8,2,55,2024-03-25,5636,"Magherini, Risso","benzo(g,h,i)perilene",mg/kg,0.100,,QC
-10,2,55,2024-03-25,5680,"Magherini, Risso",pirene,mg/kg,0.100,,QC
-10,2,55,2024-03-25,5680,"Magherini, Risso",benzo(a)antracene,mg/kg,0.082,,QC
-10,2,55,2024-03-25,5680,"Magherini, Risso",crisene,mg/kg,0.105,,QC
-10,2,55,2024-03-25,5680,"Magherini, Risso",benzo(b+j)fluorantene,mg/kg,0.080,,QC
-10,2,55,2024-03-25,5680,"Magherini, Risso",benzo(k)fluorantene,mg/kg,0.105,,QC
-10,2,55,2024-03-25,5680,"Magherini, Risso",benzo(a)pirene,mg/kg,0.096,,QC
-10,2,55,2024-03-25,5680,"Magherini, Risso","indeno(1,2,3-c,d)pirene",mg/kg,0.087,,QC
-10,2,55,2024-03-25,5680,"Magherini, Risso","dibenzo(a,h)antracene",mg/kg,0.103,,QC
-10,2,55,2024-03-25,5680,"Magherini, Risso","benzo(g,h,i)perilene",mg/kg,0.104,,QC
-4,2,55,2024-05-15,10091,Magherini,pirene,mg/kg,0.087,,QC
-4,2,55,2024-05-15,10091,Magherini,benzo(a)antracene,mg/kg,0.087,,QC
-4,2,55,2024-05-15,10091,Magherini,crisene,mg/kg,0.085,,QC
-4,2,55,2024-05-15,10091,Magherini,benzo(b+j)fluorantene,mg/kg,0.096,,QC
-4,2,55,2024-05-15,10091,Magherini,benzo(k)fluorantene,mg/kg,0.090,,QC
-4,2,55,2024-05-15,10091,Magherini,benzo(a)pirene,mg/kg,0.098,,QC
-4,2,55,2024-05-15,10091,Magherini,"indeno(1,2,3-c,d)pirene",mg/kg,0.103,,QC
-4,2,55,2024-05-15,10091,Magherini,"dibenzo(a,h)antracene",mg/kg,0.088,,QC
-4,2,55,2024-05-15,10091,Magherini,"benzo(g,h,i)perilene",mg/kg,0.105,,QC
-9,2,55,2024-03-25,563500,"Magherini, Risso",pirene,mg/kg,0.098,,QC
-9,2,55,2024-03-25,563500,"Magherini, Risso",benzo(a)antracene,mg/kg,0.089,,QC
-9,2,55,2024-03-25,563500,"Magherini, Risso",crisene,mg/kg,0.118,,QC
-9,2,55,2024-03-25,563500,"Magherini, Risso",benzo(b+j)fluorantene,mg/kg,0.101,,QC
-9,2,55,2024-03-25,563500,"Magherini, Risso",benzo(k)fluorantene,mg/kg,0.102,,QC
-9,2,55,2024-03-25,563500,"Magherini, Risso",benzo(a)pirene,mg/kg,0.094,,QC
-9,2,55,2024-03-25,563500,"Magherini, Risso","indeno(1,2,3-c,d)pirene",mg/kg,0.093,,QC
-9,2,55,2024-03-25,563500,"Magherini, Risso","dibenzo(a,h)antracene",mg/kg,0.105,,QC
-9,2,55,2024-03-25,563500,"Magherini, Risso","benzo(g,h,i)perilene",mg/kg,0.102,,QC
-11,2,55,2024-03-25,567900,"Magherini, Risso",pirene,mg/kg,0.097,,QC
-11,2,55,2024-03-25,567900,"Magherini, Risso",benzo(a)antracene,mg/kg,0.083,,QC
-11,2,55,2024-03-25,567900,"Magherini, Risso",crisene,mg/kg,0.108,,QC
-11,2,55,2024-03-25,567900,"Magherini, Risso",benzo(b+j)fluorantene,mg/kg,0.080,,QC
-11,2,55,2024-03-25,567900,"Magherini, Risso",benzo(k)fluorantene,mg/kg,0.103,,QC
-11,2,55,2024-03-25,567900,"Magherini, Risso",benzo(a)pirene,mg/kg,0.094,,QC
-11,2,55,2024-03-25,567900,"Magherini, Risso","indeno(1,2,3-c,d)pirene",mg/kg,0.085,,QC
-11,2,55,2024-03-25,567900,"Magherini, Risso","dibenzo(a,h)antracene",mg/kg,0.104,,QC
-11,2,55,2024-03-25,567900,"Magherini, Risso","benzo(g,h,i)perilene",mg/kg,0.103,,QC
-5,2,55,2024-05-15,1009000,Magherini,pirene,mg/kg,0.088,,QC
-5,2,55,2024-05-15,1009000,Magherini,benzo(a)antracene,mg/kg,0.087,,QC
-5,2,55,2024-05-15,1009000,Magherini,crisene,mg/kg,0.085,,QC
-5,2,55,2024-05-15,1009000,Magherini,benzo(b+j)fluorantene,mg/kg,0.095,,QC
-5,2,55,2024-05-15,1009000,Magherini,benzo(k)fluorantene,mg/kg,0.090,,QC
-5,2,55,2024-05-15,1009000,Magherini,benzo(a)pirene,mg/kg,0.097,,QC
-5,2,55,2024-05-15,1009000,Magherini,"indeno(1,2,3-c,d)pirene",mg/kg,0.103,,QC
-5,2,55,2024-05-15,1009000,Magherini,"dibenzo(a,h)antracene",mg/kg,0.089,,QC
-5,2,55,2024-05-15,1009000,Magherini,"benzo(g,h,i)perilene",mg/kg,0.105,,QC
-1,3,55,2024-04-29,7598,Bazzano,pirene,mg/kg,1.4717,,QC
-1,3,55,2024-04-29,7598,Bazzano,benzo(a)antracene,mg/kg,0.5155,,QC
-1,3,55,2024-04-29,7598,Bazzano,crisene,mg/kg,0.2966,,QC
-1,3,55,2024-04-29,7598,Bazzano,benzo(b+j)fluorantene,mg/kg,0.3025,,QC
-1,3,55,2024-04-29,7598,Bazzano,benzo(k)fluorantene,mg/kg,0.1029,,QC
-1,3,55,2024-04-29,7598,Bazzano,benzo(a)pirene,mg/kg,0.2242,,QC
-1,3,55,2024-04-29,7598,Bazzano,"indeno(1,2,3-c,d)pirene",mg/kg,0.1148,,QC
-1,3,55,2024-04-29,7598,Bazzano,"dibenzo(a,h)antracene",mg/kg,0.045,,QC
-1,3,55,2024-04-29,7598,Bazzano,"benzo(g,h,i)perilene",mg/kg,0.1021,,QC
-2,3,55,2024-04-29,759700,Bazzano,pirene,mg/kg,1.4907,,QC
-2,3,55,2024-04-29,759700,Bazzano,benzo(a)antracene,mg/kg,0.5155,,QC
-2,3,55,2024-04-29,759700,Bazzano,crisene,mg/kg,0.30965,,QC
-2,3,55,2024-04-29,759700,Bazzano,benzo(b+j)fluorantene,mg/kg,0.3071,,QC
-2,3,55,2024-04-29,759700,Bazzano,benzo(k)fluorantene,mg/kg,0.10165,,QC
-2,3,55,2024-04-29,759700,Bazzano,benzo(a)pirene,mg/kg,0.2149,,QC
-2,3,55,2024-04-29,759700,Bazzano,"indeno(1,2,3-c,d)pirene",mg/kg,0.1169,,QC
-2,3,55,2024-04-29,759700,Bazzano,"dibenzo(a,h)antracene",mg/kg,0.04465,,QC
-2,3,55,2024-04-29,759700,Bazzano,"benzo(g,h,i)perilene",mg/kg,0.0986,,QC
-3,3,55,2024-04-29,759701,Bazzano,pirene,μg/kg,1490.7,894.42,QC
-3,3,55,2024-04-29,759701,Bazzano,benzo(a)antracene,μg/kg,515.5,309.3,QC
-3,3,55,2024-04-29,759701,Bazzano,crisene,μg/kg,309.65,185.79,QC
-3,3,55,2024-04-29,759701,Bazzano,benzo(b+j)fluorantene,μg/kg,307.1,184.26,QC
-3,3,55,2024-04-29,759701,Bazzano,benzo(k)fluorantene,μg/kg,101.65,60.99,QC
-3,3,55,2024-04-29,759701,Bazzano,benzo(a)pirene,μg/kg,214.9,128.94,QC
-3,3,55,2024-04-29,759701,Bazzano,"indeno(1,2,3-c,d)pirene",μg/kg,116.9,70.14,QC
-3,3,55,2024-04-29,759701,Bazzano,"dibenzo(a,h)antracene",μg/kg,44.65,26.79,QC
-3,3,55,2024-04-29,759701,Bazzano,"benzo(g,h,i)perilene",μg/kg,98.6,59.16,QC
+id_plan,id_tipo,matrice,data_effettiva,campione,operatore_effettivo,parametro,udm,valore,incertezza,argomento
+8,2,"terreno",2024-03-25,"5635/24","Magherini, Risso",pirene,mg/kg,0.093,,QC
+8,2,"terreno",2024-03-25,"5635/24","Magherini, Risso",benzo(a)antracene,mg/kg,0.085,,QC
+8,2,"terreno",2024-03-25,"5635/24","Magherini, Risso",crisene,mg/kg,0.114,,QC
+8,2,"terreno",2024-03-25,"5635/24","Magherini, Risso",benzo(b+j)fluorantene,mg/kg,0.083,,QC
+8,2,"terreno",2024-03-25,"5635/24","Magherini, Risso",benzo(k)fluorantene,mg/kg,0.106,,QC
+8,2,"terreno",2024-03-25,"5635/24","Magherini, Risso",benzo(a)pirene,mg/kg,0.090,,QC
+8,2,"terreno",2024-03-25,"5635/24","Magherini, Risso","indeno(1,2,3-c,d)pirene",mg/kg,0.092,,QC
+8,2,"terreno",2024-03-25,"5635/24","Magherini, Risso","dibenzo(a,h)antracene",mg/kg,0.106,,QC
+8,2,"terreno",2024-03-25,"5635/24","Magherini, Risso","benzo(g,h,i)perilene",mg/kg,0.104,,QC
+10,2,"terreno",2024-03-25,"5679/24","Magherini, Risso",pirene,mg/kg,0.093,,QC
+10,2,"terreno",2024-03-25,"5679/24","Magherini, Risso",benzo(a)antracene,mg/kg,0.083,,QC
+10,2,"terreno",2024-03-25,"5679/24","Magherini, Risso",crisene,mg/kg,0.111,,QC
+10,2,"terreno",2024-03-25,"5679/24","Magherini, Risso",benzo(b+j)fluorantene,mg/kg,0.079,,QC
+10,2,"terreno",2024-03-25,"5679/24","Magherini, Risso",benzo(k)fluorantene,mg/kg,0.101,,QC
+10,2,"terreno",2024-03-25,"5679/24","Magherini, Risso",benzo(a)pirene,mg/kg,0.091,,QC
+10,2,"terreno",2024-03-25,"5679/24","Magherini, Risso","indeno(1,2,3-c,d)pirene",mg/kg,0.083,,QC
+10,2,"terreno",2024-03-25,"5679/24","Magherini, Risso","dibenzo(a,h)antracene",mg/kg,0.105,,QC
+10,2,"terreno",2024-03-25,"5679/24","Magherini, Risso","benzo(g,h,i)perilene",mg/kg,0.101,,QC
+1,3,"terreno",2024-04-29,"7597/24",Bazzano,pirene,mg/kg,1.510,,QC
+1,3,"terreno",2024-04-29,"7597/24",Bazzano,benzo(a)antracene,mg/kg,0.5155,,QC
+1,3,"terreno",2024-04-29,"7597/24",Bazzano,crisene,mg/kg,0.3227,,QC
+1,3,"terreno",2024-04-29,"7597/24",Bazzano,benzo(b+j)fluorantene,mg/kg,0.3117,,QC
+1,3,"terreno",2024-04-29,"7597/24",Bazzano,benzo(k)fluorantene,mg/kg,0.1004,,QC
+1,3,"terreno",2024-04-29,"7597/24",Bazzano,benzo(a)pirene,mg/kg,0.2056,,QC
+1,3,"terreno",2024-04-29,"7597/24",Bazzano,"indeno(1,2,3-c,d)pirene",mg/kg,0.119,,QC
+1,3,"terreno",2024-04-29,"7597/24",Bazzano,"dibenzo(a,h)antracene",mg/kg,0.0443,,QC
+1,3,"terreno",2024-04-29,"7597/24",Bazzano,"benzo(g,h,i)perilene",mg/kg,0.0951,,QC
+4,2,"terreno",2024-05-15,"10090/24",Magherini,pirene,mg/kg,0.088,,QC
+4,2,"terreno",2024-05-15,"10090/24",Magherini,benzo(a)antracene,mg/kg,0.086,,QC
+4,2,"terreno",2024-05-15,"10090/24",Magherini,crisene,mg/kg,0.084,,QC
+4,2,"terreno",2024-05-15,"10090/24",Magherini,benzo(b+j)fluorantene,mg/kg,0.093,,QC
+4,2,"terreno",2024-05-15,"10090/24",Magherini,benzo(k)fluorantene,mg/kg,0.089,,QC
+4,2,"terreno",2024-05-15,"10090/24",Magherini,benzo(a)pirene,mg/kg,0.096,,QC
+4,2,"terreno",2024-05-15,"10090/24",Magherini,"indeno(1,2,3-c,d)pirene",mg/kg,0.102,,QC
+4,2,"terreno",2024-05-15,"10090/24",Magherini,"dibenzo(a,h)antracene",mg/kg,0.089,,QC
+4,2,"terreno",2024-05-15,"10090/24",Magherini,"benzo(g,h,i)perilene",mg/kg,0.104,,QC
+8,2,"terreno",2024-03-25,"5636/24","Magherini, Risso",pirene,mg/kg,0.102,,QC
+8,2,"terreno",2024-03-25,"5636/24","Magherini, Risso",benzo(a)antracene,mg/kg,0.093,,QC
+8,2,"terreno",2024-03-25,"5636/24","Magherini, Risso",crisene,mg/kg,0.122,,QC
+8,2,"terreno",2024-03-25,"5636/24","Magherini, Risso",benzo(b+j)fluorantene,mg/kg,0.119,,QC
+8,2,"terreno",2024-03-25,"5636/24","Magherini, Risso",benzo(k)fluorantene,mg/kg,0.098,,QC
+8,2,"terreno",2024-03-25,"5636/24","Magherini, Risso",benzo(a)pirene,mg/kg,0.098,,QC
+8,2,"terreno",2024-03-25,"5636/24","Magherini, Risso","indeno(1,2,3-c,d)pirene",mg/kg,0.094,,QC
+8,2,"terreno",2024-03-25,"5636/24","Magherini, Risso","dibenzo(a,h)antracene",mg/kg,0.104,,QC
+8,2,"terreno",2024-03-25,"5636/24","Magherini, Risso","benzo(g,h,i)perilene",mg/kg,0.100,,QC
+10,2,"terreno",2024-03-25,"5680/24","Magherini, Risso",pirene,mg/kg,0.100,,QC
+10,2,"terreno",2024-03-25,"5680/24","Magherini, Risso",benzo(a)antracene,mg/kg,0.082,,QC
+10,2,"terreno",2024-03-25,"5680/24","Magherini, Risso",crisene,mg/kg,0.105,,QC
+10,2,"terreno",2024-03-25,"5680/24","Magherini, Risso",benzo(b+j)fluorantene,mg/kg,0.080,,QC
+10,2,"terreno",2024-03-25,"5680/24","Magherini, Risso",benzo(k)fluorantene,mg/kg,0.105,,QC
+10,2,"terreno",2024-03-25,"5680/24","Magherini, Risso",benzo(a)pirene,mg/kg,0.096,,QC
+10,2,"terreno",2024-03-25,"5680/24","Magherini, Risso","indeno(1,2,3-c,d)pirene",mg/kg,0.087,,QC
+10,2,"terreno",2024-03-25,"5680/24","Magherini, Risso","dibenzo(a,h)antracene",mg/kg,0.103,,QC
+10,2,"terreno",2024-03-25,"5680/24","Magherini, Risso","benzo(g,h,i)perilene",mg/kg,0.104,,QC
+4,2,"terreno",2024-05-15,"10091/24",Magherini,pirene,mg/kg,0.087,,QC
+4,2,"terreno",2024-05-15,"10091/24",Magherini,benzo(a)antracene,mg/kg,0.087,,QC
+4,2,"terreno",2024-05-15,"10091/24",Magherini,crisene,mg/kg,0.085,,QC
+4,2,"terreno",2024-05-15,"10091/24",Magherini,benzo(b+j)fluorantene,mg/kg,0.096,,QC
+4,2,"terreno",2024-05-15,"10091/24",Magherini,benzo(k)fluorantene,mg/kg,0.090,,QC
+4,2,"terreno",2024-05-15,"10091/24",Magherini,benzo(a)pirene,mg/kg,0.098,,QC
+4,2,"terreno",2024-05-15,"10091/24",Magherini,"indeno(1,2,3-c,d)pirene",mg/kg,0.103,,QC
+4,2,"terreno",2024-05-15,"10091/24",Magherini,"dibenzo(a,h)antracene",mg/kg,0.088,,QC
+4,2,"terreno",2024-05-15,"10091/24",Magherini,"benzo(g,h,i)perilene",mg/kg,0.105,,QC
+9,2,"terreno",2024-03-25,"563500/24","Magherini, Risso",pirene,mg/kg,0.098,,QC
+9,2,"terreno",2024-03-25,"563500/24","Magherini, Risso",benzo(a)antracene,mg/kg,0.089,,QC
+9,2,"terreno",2024-03-25,"563500/24","Magherini, Risso",crisene,mg/kg,0.118,,QC
+9,2,"terreno",2024-03-25,"563500/24","Magherini, Risso",benzo(b+j)fluorantene,mg/kg,0.101,,QC
+9,2,"terreno",2024-03-25,"563500/24","Magherini, Risso",benzo(k)fluorantene,mg/kg,0.102,,QC
+9,2,"terreno",2024-03-25,"563500/24","Magherini, Risso",benzo(a)pirene,mg/kg,0.094,,QC
+9,2,"terreno",2024-03-25,"563500/24","Magherini, Risso","indeno(1,2,3-c,d)pirene",mg/kg,0.093,,QC
+9,2,"terreno",2024-03-25,"563500/24","Magherini, Risso","dibenzo(a,h)antracene",mg/kg,0.105,,QC
+9,2,"terreno",2024-03-25,"563500/24","Magherini, Risso","benzo(g,h,i)perilene",mg/kg,0.102,,QC
+11,2,"terreno",2024-03-25,"567900/24","Magherini, Risso",pirene,mg/kg,0.097,,QC
+11,2,"terreno",2024-03-25,"567900/24","Magherini, Risso",benzo(a)antracene,mg/kg,0.083,,QC
+11,2,"terreno",2024-03-25,"567900/24","Magherini, Risso",crisene,mg/kg,0.108,,QC
+11,2,"terreno",2024-03-25,"567900/24","Magherini, Risso",benzo(b+j)fluorantene,mg/kg,0.080,,QC
+11,2,"terreno",2024-03-25,"567900/24","Magherini, Risso",benzo(k)fluorantene,mg/kg,0.103,,QC
+11,2,"terreno",2024-03-25,"567900/24","Magherini, Risso",benzo(a)pirene,mg/kg,0.094,,QC
+11,2,"terreno",2024-03-25,"567900/24","Magherini, Risso","indeno(1,2,3-c,d)pirene",mg/kg,0.085,,QC
+11,2,"terreno",2024-03-25,"567900/24","Magherini, Risso","dibenzo(a,h)antracene",mg/kg,0.104,,QC
+11,2,"terreno",2024-03-25,"567900/24","Magherini, Risso","benzo(g,h,i)perilene",mg/kg,0.103,,QC
+5,2,"terreno",2024-05-15,"1009000/24",Magherini,pirene,mg/kg,0.088,,QC
+5,2,"terreno",2024-05-15,"1009000/24",Magherini,benzo(a)antracene,mg/kg,0.087,,QC
+5,2,"terreno",2024-05-15,"1009000/24",Magherini,crisene,mg/kg,0.085,,QC
+5,2,"terreno",2024-05-15,"1009000/24",Magherini,benzo(b+j)fluorantene,mg/kg,0.095,,QC
+5,2,"terreno",2024-05-15,"1009000/24",Magherini,benzo(k)fluorantene,mg/kg,0.090,,QC
+5,2,"terreno",2024-05-15,"1009000/24",Magherini,benzo(a)pirene,mg/kg,0.097,,QC
+5,2,"terreno",2024-05-15,"1009000/24",Magherini,"indeno(1,2,3-c,d)pirene",mg/kg,0.103,,QC
+5,2,"terreno",2024-05-15,"1009000/24",Magherini,"dibenzo(a,h)antracene",mg/kg,0.089,,QC
+5,2,"terreno",2024-05-15,"1009000/24",Magherini,"benzo(g,h,i)perilene",mg/kg,0.105,,QC
+1,3,"terreno",2024-04-29,"7598/24",Bazzano,pirene,mg/kg,1.4717,,QC
+1,3,"terreno",2024-04-29,"7598/24",Bazzano,benzo(a)antracene,mg/kg,0.5155,,QC
+1,3,"terreno",2024-04-29,"7598/24",Bazzano,crisene,mg/kg,0.2966,,QC
+1,3,"terreno",2024-04-29,"7598/24",Bazzano,benzo(b+j)fluorantene,mg/kg,0.3025,,QC
+1,3,"terreno",2024-04-29,"7598/24",Bazzano,benzo(k)fluorantene,mg/kg,0.1029,,QC
+1,3,"terreno",2024-04-29,"7598/24",Bazzano,benzo(a)pirene,mg/kg,0.2242,,QC
+1,3,"terreno",2024-04-29,"7598/24",Bazzano,"indeno(1,2,3-c,d)pirene",mg/kg,0.1148,,QC
+1,3,"terreno",2024-04-29,"7598/24",Bazzano,"dibenzo(a,h)antracene",mg/kg,0.045,,QC
+1,3,"terreno",2024-04-29,"7598/24",Bazzano,"benzo(g,h,i)perilene",mg/kg,0.1021,,QC
+2,3,"terreno",2024-04-29,"759700/24",Bazzano,pirene,mg/kg,1.4907,,QC
+2,3,"terreno",2024-04-29,"759700/24",Bazzano,benzo(a)antracene,mg/kg,0.5155,,QC
+2,3,"terreno",2024-04-29,"759700/24",Bazzano,crisene,mg/kg,0.30965,,QC
+2,3,"terreno",2024-04-29,"759700/24",Bazzano,benzo(b+j)fluorantene,mg/kg,0.3071,,QC
+2,3,"terreno",2024-04-29,"759700/24",Bazzano,benzo(k)fluorantene,mg/kg,0.10165,,QC
+2,3,"terreno",2024-04-29,"759700/24",Bazzano,benzo(a)pirene,mg/kg,0.2149,,QC
+2,3,"terreno",2024-04-29,"759700/24",Bazzano,"indeno(1,2,3-c,d)pirene",mg/kg,0.1169,,QC
+2,3,"terreno",2024-04-29,"759700/24",Bazzano,"dibenzo(a,h)antracene",mg/kg,0.04465,,QC
+2,3,"terreno",2024-04-29,"759700/24",Bazzano,"benzo(g,h,i)perilene",mg/kg,0.0986,,QC
+3,3,"terreno",2024-04-29,"759701/24",Bazzano,pirene,μg/kg,1490.7,894.42,QC
+3,3,"terreno",2024-04-29,"759701/24",Bazzano,benzo(a)antracene,μg/kg,515.5,309.3,QC
+3,3,"terreno",2024-04-29,"759701/24",Bazzano,crisene,μg/kg,309.65,185.79,QC
+3,3,"terreno",2024-04-29,"759701/24",Bazzano,benzo(b+j)fluorantene,μg/kg,307.1,184.26,QC
+3,3,"terreno",2024-04-29,"759701/24",Bazzano,benzo(k)fluorantene,μg/kg,101.65,60.99,QC
+3,3,"terreno",2024-04-29,"759701/24",Bazzano,benzo(a)pirene,μg/kg,214.9,128.94,QC
+3,3,"terreno",2024-04-29,"759701/24",Bazzano,"indeno(1,2,3-c,d)pirene",μg/kg,116.9,70.14,QC
+3,3,"terreno",2024-04-29,"759701/24",Bazzano,"dibenzo(a,h)antracene",μg/kg,44.65,26.79,QC
+3,3,"terreno",2024-04-29,"759701/24",Bazzano,"benzo(g,h,i)perilene",μg/kg,98.6,59.16,QC
