@@ -9,5 +9,4 @@ app_server <- function(input, output, session) {
 
   mod_01_plan_server("tasks", r_global)
 
-  on.exit(DBI::dbDisconnect(conn))
 }

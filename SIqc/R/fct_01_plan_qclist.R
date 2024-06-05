@@ -79,8 +79,10 @@ prepare_tasks_summary <- function(df){
 #' data_effettiva, operatore_previsto, operatore_effettivo, matrice, esito.
 #' @param edit logical. TRUE for editing and FALSE for adding a new record.
 #' @param conn a DBI::dbConnect valid connection.
+#' @param id id for namespace.
 #' @return a single row dataframe.
-modal_dialog <- function(df, edit, conn) {
+#' @importFrom shiny NS
+modal_dialog <- function(df, edit, conn, id) {
   stopifnot(is.data.frame(df))
   stopifnot(
     colnames(df) == c(
@@ -96,6 +98,7 @@ modal_dialog <- function(df, edit, conn) {
     )
   )
   stopifnot(is.logical(edit))
+  ns <- shiny::NS(id)
 
   if (edit) {
     mylabel <- "Salva"
@@ -130,7 +133,7 @@ modal_dialog <- function(df, edit, conn) {
       div(
         style = "display: inline-block;",
         shiny::selectInput(
-          inputId = "method",
+          inputId = ns("method"),
           label = "Metodo",
           choices = sql_get_list(conn, "metodo"),
           selected = mymethod,
@@ -138,12 +141,12 @@ modal_dialog <- function(df, edit, conn) {
           selectize = FALSE,
           # bug https://github.com/rstudio/shiny/issues/3125
           width = "200px"
-          )
-        ),
+        )
+      ),
       div(
         style = "display: inline-block;",
         shiny::selectInput(
-          inputId = "task",
+          inputId = ns("task"),
           label = "Attvità",
           choices = sql_get_list(conn, "attivita"),
           selected = mytask,
@@ -151,12 +154,12 @@ modal_dialog <- function(df, edit, conn) {
           selectize = FALSE,
           # bug https://github.com/rstudio/shiny/issues/3125
           width = "200px"
-          )
-        ),
+        )
+      ),
       div(
         style = "display: inline-block;",
         shiny::selectInput(
-          inputId = "year",
+          inputId = ns("year"),
           label = "Anno",
           choices = sql_get_list(conn, "anno"),
           selected = myyear,
@@ -164,12 +167,12 @@ modal_dialog <- function(df, edit, conn) {
           selectize = FALSE,
           # bug https://github.com/rstudio/shiny/issues/3125
           width = "200px"
-          )
-        ),
+        )
+      ),
       div(
         style = "display: inline-block;",
         shiny::selectInput(
-          inputId = "month",
+          inputId = ns("month"),
           label = "Mese previsto",
           choices = sql_get_list(conn, "mese"),
           selected = mymonth,
@@ -177,81 +180,84 @@ modal_dialog <- function(df, edit, conn) {
           selectize = FALSE,
           # bug https://github.com/rstudio/shiny/issues/3125
           width = "200px"
-          )
-        ),
-      div(
-          style = "display: inline-block;",
-          shiny::dateInput(
-            inputId = "date",
-            label = "Data effettiva",
-            min = "2020-01-01",
-            max = "2060-12-31",
-            startview = "month",
-            language = "it",
-            format = "yyyy-mm-dd",
-            value = mydate,
-            daysofweekdisabled = c(0, 6),
-            weekstart = 1,
-            width = "200px"
-            )
-          ),
-      div(
-          style = "display: inline-block;",
-          shiny::textInput(
-            inputId = "planned_operator",
-            label = "Operatore previsto",
-            value = myplanned_operator,
-            width = "200px"
-            )
-          ),
-      div(
-          style = "display: inline-block;",
-          shiny::textInput(
-            inputId = "actual_operator",
-            label = "Operatore effettivo",
-            value = myactual_operator,
-            width = "200px"
-            )
-          ),
-        div(
-          style = "display: inline-block;",
-          shiny::selectInput(
-            inputId = "matrix",
-            label = "Matrice",
-            choices = sql_get_list(conn, "matrice"),
-            selected = mymatrix,
-            multiple = FALSE,
-            selectize = FALSE,
-            # bug https://github.com/rstudio/shiny/issues/3125
-            width = "200px"
-            )
-          )
+        )
       ),
+      div(
+        style = "display: inline-block;",
+        shiny::dateInput(
+          inputId = ns("date"),
+          label = "Data effettiva",
+          min = "2020-01-01",
+          max = "2060-12-31",
+          startview = "month",
+          language = "it",
+          format = "yyyy-mm-dd",
+          value = mydate,
+          daysofweekdisabled = c(0, 6),
+          weekstart = 1,
+          width = "200px"
+        )
+      ),
+      div(
+        style = "display: inline-block;",
+        shiny::textInput(
+          inputId = ns("planned_operator"),
+          label = "Operatore previsto",
+          value = myplanned_operator,
+          width = "200px"
+        )
+      ),
+      div(
+        style = "display: inline-block;",
+        shiny::textInput(
+          inputId = ns("actual_operator"),
+          label = "Operatore effettivo",
+          value = myactual_operator,
+          width = "200px"
+        )
+      ),
+      div(
+        style = "display: inline-block;",
+        shiny::selectInput(
+          inputId = ns("matrix"),
+          label = "Matrice",
+          choices = sql_get_list(conn, "matrice"),
+          selected = mymatrix,
+          multiple = FALSE,
+          selectize = FALSE,
+          # bug https://github.com/rstudio/shiny/issues/3125
+          width = "200px"
+        )
+      )
+    ),
     size = "m",
     easyClose = TRUE,
     footer = div(
       class = "d-flex bd-highlight mb-3 container",
-      div(class = "me-auto bd-highlight",
-      shiny::actionButton(
-        inputId = "add_data",
-        label = "Aggiungi i risultati",
-        icon = shiny::icon("vials")
-      )
+      div(
+        class = "me-auto bd-highlight",
+        shiny::actionButton(
+          inputId = ns("add_data"),
+          label = "Aggiungi i risultati",
+          icon = shiny::icon("vials")
+        )
       ),
-      div(class = "bd-highlight",
-      shiny::actionButton(
-        inputId = "final_edit",
-        label = mylabel,
-        icon = shiny::icon("edit"),
-        class = "btn-info"
-      )
+      div(
+        class = "bd-highlight",
+        shiny::actionButton(
+          inputId = ns("final_edit"),
+          label = mylabel,
+          icon = shiny::icon("edit"),
+          class = "btn-info"
+        )
       ),
-      div(class = "bd-highlight",
-      shiny::actionButton(
-        inputId = "dismiss_modal",
-        label = "Chiudi",
-        class = "btn-danger"
-      )
+      div(
+        class = "bd-highlight",
+        shiny::actionButton(
+          inputId = ns("dismiss_modal"),
+          label = "Chiudi",
+          class = "btn-danger"
+        )
       )
     )
   ) |> shiny::showModal()

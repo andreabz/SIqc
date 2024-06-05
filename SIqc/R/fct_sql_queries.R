@@ -47,84 +47,49 @@ sql_get_list <- function(conn, name){
     unname()
 }
 
-#' SQL query for QC sample type list
+#' SQL query for repeatability sample results
 #'
-#' @description get QC sample type list.
+#' @description get a data.frame of sample results for reapeatability.
 #' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param sample1 a character string with the name of the sample.
+#' @param sample2 a character string with the name of the sample.
 #'
-#' @return a character vector
+#' @return a data.frame
 #'
 #' @noRd
 #' @importFrom DBI dbGetQuery
-sql_get_list_type <- function(conn){
-  DBI::dbGetQuery(conn, "SELECT tipo FROM tipo;") |>
-    unlist() |>
-    unname()
+#' @importFrom glue glue_sql
+#' @import data.table
+sql_get_repeatability <- function(conn, sample1, sample2){
+  #stopifnot(is.character(sample1))
+  #stopifnot(is.character(sample2))
+
+  get_sample_id <- function(name){
+    myquery <- glue::glue_sql("SELECT id_campione FROM campione WHERE campione = {name};",
+                   .con = conn)
+
+    DBI::dbGetQuery(conn, myquery) |>
+      unlist() |>
+      unname()
+  }
+
+  sample1_id <- get_sample_id(sample1)
+  sample2_id <- get_sample_id(sample2)
+
+  query <- glue::glue_sql("SELECT
+                            a.parametro,
+                            a.udm,
+                            a.valore AS campione1,
+                            b.valore AS campione2
+                           FROM risultati AS a
+                          LEFT JOIN (
+                            SELECT id_campione, parametro, valore FROM risultati
+                          ) AS b
+                          ON a.parametro = b.parametro
+                          WHERE a.id_campione = {sample1_id} AND b.id_campione = {sample2_id};",
+                          .con = conn)
+
+  DBI::dbGetQuery(conn, query) |>
+    data.table::data.table()
 }
 
-#' SQL query for months
-#'
-#' @description get months.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
-#'
-#' @return a character vector
-#'
-#' @noRd
-#' @importFrom DBI dbGetQuery
-sql_get_list_month <- function(conn){
-  DBI::dbGetQuery(conn, "SELECT mese FROM mese;") |>
-    unlist() |>
-    unname()
-}
-
-#' SQL query for year
-#'
-#' @description get year.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
-#'
-#' @return a SQL query performing on a established db connection.
-#'
-#' @noRd
-#' @importFrom DBI dbGetQuery
-sql_get_list_year <- function(conn){
-  DBI::dbGetQuery(conn, "SELECT anno FROM anno;")
-}
-
-#' SQL query for sample ids
-#'
-#' @description get a list of sample ids.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
-#'
-#' @return a SQL query performing on a established db connection.
-#'
-#' @noRd
-#' @importFrom DBI dbGetQuery
-sql_get_list_sample <- function(conn){
-  DBI::dbGetQuery(conn, "SELECT campione FROM campione;")
-}
-
-#' SQL query for method ids
-#'
-#' @description get a list of method ids.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
-#'
-#' @return a SQL query performing on a established db connection.
-#'
-#' @noRd
-#' @importFrom DBI dbGetQuery
-sql_get_list_method <- function(conn){
-  DBI::dbGetQuery(conn, "SELECT metodo FROM metodo;")
-}
-
-#' SQL query for task types
-#'
-#' @description get a list of method ids.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
-#'
-#' @return a SQL query performing on a established db connection.
-#'
-#' @noRd
-#' @importFrom DBI dbGetQuery
-sql_get_list_task <- function(conn){
-  DBI::dbGetQuery(conn, "SELECT attivita FROM attivita;")
-}

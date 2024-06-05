@@ -57,51 +57,6 @@ DBI::dbExecute(conn, "CREATE TABLE metodo(
 DBI::dbWriteTable(conn, "metodo", metodo_data, append = TRUE)
 DBI::dbGetQuery(conn, "SELECT * FROM metodo;")
 
-#### plan table ----
-plan_data <- read.csv2(here::here("data/registro.csv"))
-DBI::dbWriteTable(conn, "plan_tmp", plan_data, append = TRUE)
-DBI::dbExecute(conn, "CREATE TABLE plan(
-                id_plan integer PRIMARY KEY AUTOINCREMENT,
-                id_metodo integer NOT NULL,
-                id_attivita integer NOT NULL,
-                id_anno integer NOT NULL,
-                id_mese text NOT NULL,
-                id_matrice integer NOT NULL,
-                id_campione1 integer,
-                id_campione2 integer,
-                operatore_previsto text NOT NULL,
-                esito integer
-                );")
-DBI::dbExecute(conn,
-               "INSERT INTO plan(
-                id_metodo,
-                id_attivita,
-                id_anno,
-                id_mese,
-                id_matrice,
-                id_campione1,
-                id_campione2,
-                operatore_previsto,
-                esito)
-                SELECT
-                  plan_tmp.id_metodo,
-                  plan_tmp.id_attivita,
-                  plan_tmp.id_anno,
-                  plan_tmp.id_mese,
-                  plan_tmp.id_matrice,
-                  a.id_campione AS id_campione1,
-                  b.id_campione AS id_campione2,
-                  plan_tmp.data_effettiva,
-                  plan_tmp.operatore_previsto,
-                  plan_tmp.operatore_effettivo,
-                  plan_tmp.esito
-                 FROM plan_tmp
-                  LEFT JOIN (SELECT id_campione, campione FROM campione) AS a
-                    ON plan_tmp.campione1 = a.campione
-                  LEFT JOIN (SELECT id_campione, campione FROM campione) AS b
-                    ON plan_tmp.campione2 = b.campione;")
-DBI::dbExecute(conn, "DROP TABLE plan_tmp;")
-
 #### campione table ----
 risultati_data <- read.csv(here::here("data/risultati.csv"))
 DBI::dbWriteTable(conn, "risultati_tmp", risultati_data, append = TRUE)
@@ -111,7 +66,7 @@ campione_data <- data.frame(campione = campioni,
 DBI::dbExecute(conn, "CREATE TABLE campione(
                 id_campione integer PRIMARY KEY AUTOINCREMENT,
                 campione text NOT NULL,
-                id_metodo integer NOT NULL
+                id_metodo integer NOT NULL REFERENCES metodo(id_metodo)
                 );")
 DBI::dbWriteTable(conn, "campione", campione_data, append = TRUE)
 DBI::dbGetQuery(conn, "SELECT * FROM campione;")
@@ -193,13 +148,56 @@ DBI::dbExecute(conn, "CREATE TABLE matrice(
 DBI::dbWriteTable(conn, "matrice", matrice_data, append = TRUE)
 DBI::dbGetQuery(conn, "SELECT * FROM matrice;")
 
+#### plan table ----
+plan_data <- read.csv2(here::here("data/registro.csv"))
+DBI::dbWriteTable(conn, "plan_tmp", plan_data, append = TRUE)
+DBI::dbExecute(conn, "CREATE TABLE plan(
+                id_plan integer PRIMARY KEY AUTOINCREMENT,
+                id_metodo integer NOT NULL REFERENCES metodo(id_metodo),
+                id_attivita integer NOT NULL REFERENCES attivita(id_attivita),
+                id_anno integer NOT NULL REFERENCES anno(id_anno),
+                id_mese text NOT NULL REFERENCES mese(id_mese),
+                id_matrice integer NOT NULL REFERENCES matrice(id_matrice),
+                id_campione1 integer REFERENCES campione(id_campione),
+                id_campione2 integer REFERENCES campione(id_campione),
+                operatore_previsto text NOT NULL,
+                esito integer
+                );")
+DBI::dbExecute(conn,
+               "INSERT INTO plan(
+                id_metodo,
+                id_attivita,
+                id_anno,
+                id_mese,
+                id_matrice,
+                id_campione1,
+                id_campione2,
+                operatore_previsto,
+                esito)
+                SELECT
+                  plan_tmp.id_metodo,
+                  plan_tmp.id_attivita,
+                  plan_tmp.id_anno,
+                  plan_tmp.id_mese,
+                  plan_tmp.id_matrice,
+                  a.id_campione AS id_campione1,
+                  b.id_campione AS id_campione2,
+                  plan_tmp.operatore_previsto,
+                  plan_tmp.esito
+                 FROM plan_tmp
+                  LEFT JOIN (SELECT id_campione, campione FROM campione) AS a
+                    ON plan_tmp.campione1 = a.campione
+                  LEFT JOIN (SELECT id_campione, campione FROM campione) AS b
+                    ON plan_tmp.campione2 = b.campione;")
+DBI::dbExecute(conn, "DROP TABLE plan_tmp;")
+
 #### risultati table ----
 DBI::dbExecute(conn, "CREATE TABLE risultati(
                 id_risultati integer PRIMARY KEY AUTOINCREMENT,
-                id_plan integer NOT NULL,
-                id_tipo integer NOT NULL,
-                id_matrice integer NOT NULL,
-                id_campione integer NOT NULL,
+                id_plan integer NOT NULL REFERENCES plan(id_plan),
+                id_tipo integer NOT NULL REFERENCES tipo(id_tipo),
+                id_matrice integer NOT NULL REFERENCES matrice(id_matrice),
+                id_campione integer NOT NULL REFERENCES campione(id_campione),
                 data_effettiva date NOT NULL,
                 operatore_effettivo text NOT NULL,
                 parametro text NOT NULL,
@@ -257,16 +255,20 @@ DBI::dbExecute(conn, "INSERT INTO registro
                               attivita,
                               anno,
                               mese AS mese_previsto,
-                              data_effettiva,
+                              res.data_effettiva,
                               operatore_previsto,
-                              operatore_effettivo,
+                              res.operatore_effettivo,
                               matrice,
                               esito FROM plan
                          INNER JOIN metodo ON plan.id_metodo = metodo.id_metodo
                          INNER JOIN attivita ON plan.id_attivita = attivita.id_attivita
                          INNER JOIN anno ON plan.id_anno = anno.id_anno
                          INNER JOIN mese ON plan.id_mese = mese.id_mese
-                         INNER JOIN matrice ON plan.id_matrice = matrice.id_matrice;")
+                         INNER JOIN matrice ON plan.id_matrice = matrice.id_matrice
+                         LEFT JOIN (
+                          SELECT DISTINCT id_plan, data_effettiva, operatore_effettivo FROM risultati
+                          ) AS res
+                          ON plan.id_plan = res.id_plan;")
 DBI::dbGetQuery(conn, "SELECT * FROM registro;")
 
 # get planned tasks ----

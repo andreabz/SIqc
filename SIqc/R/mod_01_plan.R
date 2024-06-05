@@ -17,7 +17,7 @@ mod_01_plan_ui <- function(id){
     div(
       class = "container",
       div(
-        style = "margin-top: 50px;",
+        style = "margin-top: 20px;",
         bslib::input_task_button(id = ns("add_task"),
                                  label = "Aggiungi attività",
                                  icon = shiny::icon("plus")
@@ -27,7 +27,7 @@ mod_01_plan_ui <- function(id){
 
     div(
       class = "container",
-        style = "margin-top: 50px;",
+        style = "margin-top: 20px;",
     DT::DTOutput(outputId = ns("dt_table"), width = "100%")
       )
 
@@ -74,30 +74,7 @@ mod_01_plan_server <- function(id, r_global){
       rownames = FALSE,
       callback = DT::JS('$(\'div.has-feedback input[type="search"]\').attr( "placeholder", "Tutti" )'),
       options = list(processing = FALSE,
-                     language = list(
-                       length = "Mostra",
-                       emptyTable = "Nessun dato presente nella tabella",
-                       info = "Vista da _START_ a _END_ di _TOTAL_ elementi",
-                       infoEmpty ="Vista da 0 a 0 di 0 elementi",
-                       infoFiltered = "(filtrati da _MAX_ elementi totali)",
-                       infoPostfix = "",
-                       infoThousands = ".",
-                       lengthMenu = "Visualizza _MENU_ elementi",
-                       loadingRecords = "Caricamento...",
-                       processing = "Elaborazione...",
-                       search = "Cerca:",
-                       zeroRecords = "La ricerca non ha portato alcun risultato.",
-                       paginate = list(
-                         first = "Inizio",
-                         previous = "Precedente",
-                         `next` = "Successivo",
-                         last = "Fine"
-                       ),
-                       aria = list(
-                         sortAscending = ": attiva per ordinare la colonna in ordine crescente",
-                         sortDescending = ": attiva per ordinare la colonna in ordine decrescente"
-                       )
-                     )
+                     language = dt_italian
       )
     )
 
@@ -127,11 +104,110 @@ mod_01_plan_server <- function(id, r_global){
                                                          paste0("\\b", input$current_id, "\\b")))
 
       r_local$edited_row <- r_local$df[r_local$dt_row, .SD, .SDcols = !c("actions")]
-      print(r_local$edited_row)
-      modal_dialog(r_local$edited_row, edit = TRUE, conn = conn)
-
+      modal_dialog(r_local$edited_row, edit = TRUE, conn = conn, id = id)
+      r_local$add_or_edit <- NULL
     })
 
+    ##### close modal ----
+    shiny::observeEvent(input$dismiss_modal, {
+      shiny::removeModal()
+    })
+
+    ##### save modal ----
+    shiny::observeEvent(input$final_edit, {
+      shiny::req(!is.null(input$current_id) &
+                  grepl("edit", input$current_id) &
+                  is.null(r_local$add_or_edit))
+
+      r_local$edited_row <- list(
+        metodo = input$method,
+        attivita = input$task,
+        anno = input$year |> as.integer(),
+        mese_previsto = input$month,
+        data_effettiva = input$date,
+        operatore_previsto = input$planned_operator,
+        operatore_effettivo = input$actual_operator,
+        matrice = input$matrix,
+        esito = NA,
+        actions = r_local$df$actions[r_local$dt_row]
+      )
+
+      r_local$df[r_local$dt_row,] <- r_local$edited_row
+      shiny::removeModal()
+    })
+
+    ##### add samples ----
+    shiny::observeEvent(input$add_task, {
+      empty_row <- data.frame(
+        metodo = NA,
+        attivita = NA,
+        anno = NA,
+        mese_previsto = NA,
+        data_effettiva = NA,
+        operatore_previsto = NA,
+        operatore_effettivo = NA,
+        matrice = NA,
+        esito = NA
+      )
+
+      modal_dialog(empty_row, edit = FALSE, conn = conn, id = id)
+      r_local$add_or_edit <- 1
+    })
+
+    ##### save modal for new row ----
+    shiny::observeEvent(input$final_edit, {
+      shiny::req(r_local$add_or_edit == 1)
+
+      add_row <- list(
+        metodo = input$method,
+        attivita = input$task,
+        anno = input$year |> as.integer(),
+        mese_previsto = input$month,
+        data_effettiva = input$date,
+        operatore_previsto = input$planned_operator,
+        operatore_effettivo = input$actual_operator,
+        matrice = input$matrix,
+        esito = NA,
+        actions = table_btns(r_local$keep_track_id)
+      )
+
+      r_local$df <- list(r_local$df, add_row) |> data.table::rbindlist()
+      print(r_local$keep_track_id)
+      shiny::removeModal()
+    })
+
+    ##### add data ----
+    shiny::observeEvent(input$add_data, {
+
+      repeatability_modal(edit = TRUE, conn = conn, id)
+      shiny::removeModal()
+    })
+
+    select_samples <- reactive({
+      sample_data <- sql_get_repeatability(conn, input$sample1, input$sample2)
+      # get the number of decimals
+      ndecimal <- lapply(sample_data$campione1, decimalplaces) |> unlist() |> max() + 1
+      sample_data[, `:=` (differenza = abs(campione1 - campione2) |> round(ndecimal),
+                          r = rep(NA, .N),
+                          esito = rep(NA, .N)) ]
+    })
+
+    output$dt_data <- renderUI({
+      DT::datatable(
+        select_samples(),
+        filter = "none",
+        rownames = FALSE,
+        colnames = c("Parametro", "Unità di misura", "Campione 1", "Campione 2"),
+        options = list(
+          columnDefs = list(list(className = 'dt-left', targets = 0),
+                            list(className = 'dt-right', targets = 1)),
+          dom = 'tp',
+          processing = FALSE,
+          language = dt_italian
+        )
+      )
+
+    })
 
 
   })
