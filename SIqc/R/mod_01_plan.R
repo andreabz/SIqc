@@ -44,10 +44,7 @@ mod_01_plan_server <- function(id, r_global){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
-    conn <- DBI::dbConnect(RSQLite::SQLite(),
-                           "./data/sqlite_test.db",
-                           extended_types = TRUE)
-
+    conn <- isolate(r_global$conn)
     input_df <- sql_get_task_summary(conn)
 
     ##### add the action buttons ----
@@ -59,7 +56,8 @@ mod_01_plan_server <- function(id, r_global){
       dt_row = NULL,
       add_or_edit = NULL,
       edit_button = NULL,
-      keep_track_id = nrow(df) + 1
+      keep_track_id = nrow(df) + 1,
+      sample_results = data.table::data.table()
     )
 
     ###### tasks table -----
@@ -172,7 +170,6 @@ mod_01_plan_server <- function(id, r_global){
       )
 
       r_local$df <- list(r_local$df, add_row) |> data.table::rbindlist()
-      print(r_local$keep_track_id)
       shiny::removeModal()
     })
 
@@ -183,30 +180,56 @@ mod_01_plan_server <- function(id, r_global){
       shiny::removeModal()
     })
 
-    select_samples <- reactive({
+    observeEvent(c(input$sample1, input$sample2), {
       sample_data <- sql_get_repeatability(conn, input$sample1, input$sample2)
       # get the number of decimals
-      ndecimal <- lapply(sample_data$campione1, decimalplaces) |> unlist() |> max() + 1
+      ndecimal <- lapply(sample_data$campione1, decimalplaces) |> unlist() |> max()
       sample_data[, `:=` (differenza = abs(campione1 - campione2) |> round(ndecimal),
-                          r = rep(NA, .N),
-                          esito = rep(NA, .N)) ]
+                          r = rep(NA, .N)  |> as.numeric(),
+                          esito = rep(NA, .N)  |> as.numeric()) ]
+
+      r_local$sample_results <- sample_data
     })
 
     output$dt_data <- renderUI({
-      DT::datatable(
-        select_samples(),
+
+      output$dt_data_tbl <- DT::renderDT(
+        r_local$sample_results,
         filter = "none",
+        selection = "none",
         rownames = FALSE,
-        colnames = c("Parametro", "Unità di misura", "Campione 1", "Campione 2"),
+        editable = list(target = "column", disable = list(columns = c(0, 1, 2, 3, 4, 6))),
+        colnames = c(
+          "Parametro",
+          "Unità di misura",
+          "Campione 1",
+          "Campione 2",
+          "Differenza",
+          "r",
+          "esito"
+        ),
         options = list(
-          columnDefs = list(list(className = 'dt-left', targets = 0),
-                            list(className = 'dt-right', targets = 1)),
+          columnDefs = list(
+            list(className = 'dt-left', targets = 0),
+            list(className = 'dt-right', targets = 1)
+          ),
           dom = 'tp',
           processing = FALSE,
           language = dt_italian
         )
-      )
+    )
+      DT::DTOutput(ns("dt_data_tbl"))
+    })
 
+    # when the table is edited compliance is assessed
+    observeEvent(input$dt_data_tbl_cell_edit, {
+
+      r_local$sample_results <- DT::editData(r_local$sample_results,
+                                             input$dt_data_tbl_cell_edit,
+                                             "dt_data_tbl", rownames = FALSE)
+      r_local$sample_results$esito <- ifelse(r_local$sample_results$differenza <= r_local$sample_results$r,
+                                             "conforme",
+                                             "non conforme")
     })
 
 

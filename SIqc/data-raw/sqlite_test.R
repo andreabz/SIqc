@@ -343,6 +343,46 @@ DBI::dbGetQuery(conn, "SELECT metodo,
 
 DBI::dbExecute(conn, "DROP TABLE risultati_tmp")
 
+#### ripetibilita table ----
+rip_data <- read.csv2(here::here("data/ripetibilita.csv"))
+DBI::dbWriteTable(conn, "rip_tmp", rip_data, append = TRUE)
+DBI::dbExecute(conn, "CREATE TABLE ripetibilita(
+                id_rip integer PRIMARY KEY AUTOINCREMENT,
+                id_plan integer NOT NULL REFERENCES plan(id_plan),
+                parametro text NOT NULL,
+                differenza real,
+                diff_on_r real,
+                esito text
+                );")
+
+DBI::dbExecute(conn, "INSERT INTO ripetibilita(
+                        id_plan,
+                        parametro,
+                        differenza,
+                        diff_on_r,
+                        esito)
+                       SELECT
+                        id_plan,
+                        parametro,
+                        differenza,
+                        diff_on_r,
+                        esito
+                       FROM rip_tmp;")
+DBI::dbGetQuery(conn, "SELECT * FROM ripetibilita;")
+
+DBI::dbGetQuery(dbok, "SELECT
+                            a.parametro,
+                            a.udm,
+                            a.valore AS campione1,
+                            b.valore AS campione2
+                           FROM risultati AS a
+                          LEFT JOIN (
+                            SELECT id_campione, parametro, valore FROM risultati
+                          ) AS b
+                          ON a.parametro = b.parametro
+                          LEFT JOIN ripetibilita ON ripetibilita.id_plan = plan.id_plan
+                          WHERE a.id_campione = 3 AND b.id_campione = 11;")
+
 #### TODO ####
 ## usare id_plan per unire risultati e plan
 ## prendere data_effettiva e operatore_effettivo da risultati e metterlo in plan
