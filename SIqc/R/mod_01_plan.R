@@ -175,20 +175,24 @@ mod_01_plan_server <- function(id, r_global){
 
     ##### add data ----
     shiny::observeEvent(input$add_data, {
+      sample_ids <- get_sample_id_for_task(conn, r_local$dt_row)
+
+      print(length(sample_ids))
+
+      if(sum(!is.na(sample_ids)) == 2){
+        updateSelectInput(session, "sample1", selected = get_sample_name(conn, sample_ids[1]))
+        updateSelectInput(session, "sample2", selected = get_sample_name(conn, sample_ids[2]))
+      }
 
       repeatability_modal(edit = TRUE, conn = conn, id)
       shiny::removeModal()
     })
 
     observeEvent(c(input$sample1, input$sample2), {
-      sample_data <- sql_get_repeatability(conn, input$sample1, input$sample2)
-      # get the number of decimals
-      ndecimal <- lapply(sample_data$campione1, decimalplaces) |> unlist() |> max()
-      sample_data[, `:=` (differenza = abs(campione1 - campione2) |> round(ndecimal),
-                          r = rep(NA, .N)  |> as.numeric(),
-                          esito = rep(NA, .N)  |> as.numeric()) ]
-
-      r_local$sample_results <- sample_data
+      r_local$sample_results <- sql_get_repeatability(conn,
+                                                      input$sample1,
+                                                      input$sample2,
+                                                      mytask = r_local$dt_row)
     })
 
     output$dt_data <- renderUI({

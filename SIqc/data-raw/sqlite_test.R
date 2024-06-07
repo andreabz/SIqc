@@ -351,6 +351,7 @@ DBI::dbExecute(conn, "CREATE TABLE ripetibilita(
                 id_plan integer NOT NULL REFERENCES plan(id_plan),
                 parametro text NOT NULL,
                 differenza real,
+                r real,
                 diff_on_r real,
                 esito text
                 );")
@@ -359,16 +360,19 @@ DBI::dbExecute(conn, "INSERT INTO ripetibilita(
                         id_plan,
                         parametro,
                         differenza,
+                        r,
                         diff_on_r,
                         esito)
                        SELECT
                         id_plan,
                         parametro,
                         differenza,
+                        r,
                         diff_on_r,
                         esito
                        FROM rip_tmp;")
 DBI::dbGetQuery(conn, "SELECT * FROM ripetibilita;")
+DBI::dbExecute(conn, "DROP TABLE rip_tmp;")
 
 DBI::dbGetQuery(dbok, "SELECT
                             a.parametro,
@@ -382,6 +386,28 @@ DBI::dbGetQuery(dbok, "SELECT
                           ON a.parametro = b.parametro
                           LEFT JOIN ripetibilita ON ripetibilita.id_plan = plan.id_plan
                           WHERE a.id_campione = 3 AND b.id_campione = 11;")
+
+DBI::dbGetQuery(conn, "SELECT
+                        plan.id_plan,
+                        plan.id_campione1,
+                        plan.id_campione2,
+                        plan.operatore_previsto,
+                        res1.data_effettiva,
+                        res1.operatore_effettivo,
+                        res1.parametro,
+                        res1.valore AS campione1,
+                        res2.valore AS campione2,
+                        rep.differenza,
+                        rep.r,
+                        rep.diff_on_r,
+                        rep.esito
+                        FROM plan
+                      LEFT JOIN risultati AS res1 ON plan.id_campione1 = res1.id_campione
+                      LEFT JOIN risultati AS res2 ON plan.id_campione2 = res2.id_campione
+                        AND res2.parametro = res1.parametro
+                      LEFT JOIN ripetibilita AS rep ON plan.id_plan = rep.id_plan
+                        AND res1.parametro = rep.parametro
+                      WHERE plan.id_campione1 = 3 AND plan.id_campione2 = 11;")
 
 #### TODO ####
 ## usare id_plan per unire risultati e plan
