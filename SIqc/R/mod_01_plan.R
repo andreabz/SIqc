@@ -44,21 +44,31 @@ mod_01_plan_server <- function(id, r_global){
   moduleServer(id, function(input, output, session){
     ns <- session$ns
 
-    conn <- isolate(r_global$conn)
-    input_df <- sql_get_task_summary(conn)
+    # a reactive trigger for importing data from db
+    dbtrigger <- makereactivetrigger()
 
-    ##### add the action buttons ----
-    df <- add_btns(input_df)
+    conn <- isolate(r_global$conn)
+
+    input_df <- reactive({
+      dbtrigger$depend()
+      sql_get_task_summary(conn)
+    })
 
     r_local <- shiny::reactiveValues(
-      df = df,
+      df = NULL,
       edited_row = NULL,
       dt_row = NULL,
       add_or_edit = NULL,
       edit_button = NULL,
-      keep_track_id = nrow(df) + 1,
+      keep_track_id = NULL,
       sample_results = data.table::data.table()
     )
+
+    ##### add the action buttons ----
+    observeEvent(input_df(), {
+      r_local$df <- add_btns(input_df())
+      r_local$keep_track_id <- max(r_local$df$id)
+    })
 
     ###### tasks table -----
     output$dt_table <- DT::renderDT(
@@ -72,7 +82,13 @@ mod_01_plan_server <- function(id, r_global){
       rownames = FALSE,
       callback = DT::JS('$(\'div.has-feedback input[type="search"]\').attr( "placeholder", "Tutti" )'),
       options = list(processing = FALSE,
-                     language = dt_italian
+                     language = dt_italian,
+                     columnDefs = list(
+                       list(
+                         visible = FALSE,
+                         targets = 0 # exclude id column
+                       )
+                     )
       )
     )
 
@@ -87,9 +103,12 @@ mod_01_plan_server <- function(id, r_global){
       req(grepl("delete", input$current_id))
 
       # stringi functions are much faster than grepl
-      r_local$dt_row <- which(stringi::stri_detect_regex(r_local$df$actions,
-                                                         paste0("\\b", input$current_id, "\\b")))
-      r_local$df <- r_local$df[-r_local$dt_row, ]
+      r_local$dt_row <- r_local$df[which(stringi::stri_detect_regex(r_local$df$actions,
+                                                         paste0("\\b", input$current_id, "\\b"))), id]
+
+      del_task_id(conn, r_local$dt_row)
+      # update data from db
+      dbtrigger$trigger()
     })
 
     ##### edit a row ----
@@ -98,26 +117,26 @@ mod_01_plan_server <- function(id, r_global){
       req(grepl("edit", input$current_id))
 
       # stringi functions are much faster than grepl
-      r_local$dt_row <- which(stringi::stri_detect_regex(r_local$df$actions,
-                                                         paste0("\\b", input$current_id, "\\b")))
-
-      r_local$edited_row <- r_local$df[r_local$dt_row, .SD, .SDcols = !c("actions")]
+      idx <- which(stringi::stri_detect_regex(r_local$df$actions, paste0("\\b", input$current_id, "\\b")))
+      r_local$dt_row <- r_local$df[idx, id]
+      r_local$edited_row <- r_local$df[id == r_local$dt_row, .SD, .SDcols = !c("id", "actions")]
       modal_dialog(r_local$edited_row, edit = TRUE, conn = conn, id = id)
       r_local$add_or_edit <- NULL
     })
 
-    ##### close modal ----
+    ###### close modal ----
     shiny::observeEvent(input$dismiss_modal, {
       shiny::removeModal()
     })
 
-    ##### save modal ----
+    ###### save modal ----
     shiny::observeEvent(input$final_edit, {
       shiny::req(!is.null(input$current_id) &
                   grepl("edit", input$current_id) &
                   is.null(r_local$add_or_edit))
 
       r_local$edited_row <- list(
+        id = r_local$dt_row,
         metodo = input$method,
         attivita = input$task,
         anno = input$year |> as.integer(),
@@ -127,10 +146,12 @@ mod_01_plan_server <- function(id, r_global){
         operatore_effettivo = input$actual_operator,
         matrice = input$matrix,
         esito = NA,
-        actions = r_local$df$actions[r_local$dt_row]
+        actions = r_local$df[id == r_local$dt_row, actions]
       )
 
-      r_local$df[r_local$dt_row,] <- r_local$edited_row
+      modify_task_id(conn, r_local$edited_row, r_local$dt_row)
+      # update data from db
+      dbtrigger$trigger()
       shiny::removeModal()
     })
 
@@ -157,6 +178,7 @@ mod_01_plan_server <- function(id, r_global){
       shiny::req(r_local$add_or_edit == 1)
 
       add_row <- list(
+        #id = r_local$keep_track_id + 1,
         metodo = input$method,
         attivita = input$task,
         anno = input$year |> as.integer(),
@@ -165,19 +187,19 @@ mod_01_plan_server <- function(id, r_global){
         operatore_previsto = input$planned_operator,
         operatore_effettivo = input$actual_operator,
         matrice = input$matrix,
-        esito = NA,
-        actions = table_btns(r_local$keep_track_id)
+        esito = NA#,
+        #actions = table_btns(r_local$keep_track_id + 1)
       )
 
-      r_local$df <- list(r_local$df, add_row) |> data.table::rbindlist()
+      add_task(conn, add_row)
+      dbtrigger$trigger()
+
       shiny::removeModal()
     })
 
     ##### add data ----
     shiny::observeEvent(input$add_data, {
       sample_ids <- get_sample_id_for_task(conn, r_local$dt_row)
-
-      print(length(sample_ids))
 
       if(sum(!is.na(sample_ids)) == 2){
         updateSelectInput(session, "sample1", selected = get_sample_name(conn, sample_ids[1]))
@@ -234,6 +256,24 @@ mod_01_plan_server <- function(id, r_global){
       r_local$sample_results$esito <- ifelse(r_local$sample_results$differenza <= r_local$sample_results$r,
                                              "conforme",
                                              "non conforme")
+    })
+
+    ###### close modal ----
+    shiny::observeEvent(input$close_btn, {
+      shiny::removeModal()
+    })
+
+    ###### save modal ----
+    shiny::observeEvent(input$save_res, {
+      shiny::req(!is.null(input$current_id) &
+                   grepl("edit", input$current_id) &
+                   is.null(r_local$add_or_edit))
+
+
+      ########### AGGIUNGERE AGGIORNAMENTO DB ###############
+      # update data from db
+      dbtrigger$trigger()
+      shiny::removeModal()
     })
 
 

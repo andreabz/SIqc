@@ -29,14 +29,9 @@ table_btns <- function(x) {
 #' @noRd
 #' @import data.table
 add_btns <- function(df) {
-  stopifnot(is.data.frame(df) || data.table::is.data.table(df))
 
-  if(is.data.frame(df)) {
     dt <- data.table::data.table(df)
-    dt[, actions := table_btns(.I)]
-  } else {
-    df[, actions := table_btns(.I)]
-  }
+    dt[, actions := table_btns(id)]
 }
 
 #' Prepare the dataset
@@ -102,7 +97,7 @@ modal_dialog <- function(df, edit, conn, id) {
 
   if (edit) {
     mylabel <- "Salva"
-    mymethod <- df$method
+    mymethod <- df$metodo
     mytask <- df$attivita
     myyear <- df$anno
     mymonth <- df$mese_previsto

@@ -8,7 +8,9 @@
 #' @noRd
 #' @importFrom DBI dbGetQuery
 sql_get_task_summary <- function(conn){
-  DBI::dbGetQuery(conn, "SELECT metodo,
+  DBI::dbGetQuery(conn, "SELECT
+                              plan.id_plan AS id,
+                              metodo,
                               attivita,
                               anno,
                               mese AS mese_previsto,
@@ -178,3 +180,97 @@ get_sample_id_for_task <- function(conn, task_id){
     unname()
 }
 
+#' SQL query for removing a row given its id.
+#'
+#' @description remove a row given its id into the plan table into the DB.
+#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param id the id of the task.
+#' @return an SQL expression.
+#'
+#' @noRd
+#' @importFrom DBI dbExecute
+#' @importFrom glue glue_sql
+del_task_id <- function(conn, task_id){
+  myquery <- glue::glue_sql("DELETE FROM plan WHERE id_plan = {task_id};",
+                            .con = conn)
+
+  DBI::dbExecute(conn, myquery)
+}
+
+#' SQL query for modifying a row given its id.
+#'
+#' @description modify a row given its id into the plan table into the DB.
+#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param newvalue a data.frame with the new values.
+#' @param id the id of the task.
+#' @return an SQL expression.
+#'
+#' @noRd
+#' @importFrom DBI dbExecute dbGetQuery
+#' @importFrom glue glue_sql
+modify_task_id <- function(conn, newvalue, task_id){
+
+  opprevisto_value <- newvalue$operatore_previsto
+  esito_value <- 1
+
+  method_value <- DBI::dbGetQuery(conn, "SELECT id_metodo FROM metodo WHERE metodo = ?",
+                                  params = newvalue$metodo)
+  task_value <- DBI::dbGetQuery(conn, "SELECT id_attivita FROM attivita WHERE attivita = ?",
+                                params = newvalue$attivita)
+  year_value <- DBI::dbGetQuery(conn, "SELECT id_anno FROM anno WHERE anno = ?",
+                                params = newvalue$anno)
+  month_value <- DBI::dbGetQuery(conn, "SELECT id_mese FROM mese WHERE mese = ?",
+                                 params = newvalue$mese_previsto)
+  matrix_value <- DBI::dbGetQuery(conn, "SELECT id_matrice FROM matrice WHERE matrice = ?",
+                                  params = newvalue$matrice)
+
+  myquery <- glue::glue_sql("UPDATE plan
+                             SET id_metodo = {method_value},
+                                 id_attivita = {task_value},
+                                 id_anno = {year_value},
+                                 id_mese = {month_value},
+                                 id_matrice = {matrix_value},
+                                 operatore_previsto = {opprevisto_value},
+                                 esito = {esito_value}
+                             WHERE id_plan = {task_id};",
+                            .con = conn)
+
+  DBI::dbExecute(conn, myquery)
+}
+
+#' SQL query for adding a new row.
+#'
+#' @description modify a row given its id into the plan table into the DB.
+#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param newvalue a data.frame with the new values.
+#' @return an SQL expression.
+#'
+#' @noRd
+#' @importFrom DBI dbExecute dbGetQuery
+#' @importFrom glue glue_sql
+add_task <- function(conn, newvalue){
+
+  opprevisto_value <- newvalue$operatore_previsto
+  esito_value <- 1
+
+  method_value <- DBI::dbGetQuery(conn, "SELECT id_metodo FROM metodo WHERE metodo = ?",
+                                  params = newvalue$metodo)
+  task_value <- DBI::dbGetQuery(conn, "SELECT id_attivita FROM attivita WHERE attivita = ?",
+                                params = newvalue$attivita)
+  year_value <- DBI::dbGetQuery(conn, "SELECT id_anno FROM anno WHERE anno = ?",
+                                params = newvalue$anno)
+  month_value <- DBI::dbGetQuery(conn, "SELECT id_mese FROM mese WHERE mese = ?",
+                                 params = newvalue$mese_previsto)
+  matrix_value <- DBI::dbGetQuery(conn, "SELECT id_matrice FROM matrice WHERE matrice = ?",
+                                  params = newvalue$matrice)
+
+  myquery <- glue::glue_sql("INSERT INTO plan (id_metodo, id_attivita, id_anno,
+                                               id_mese, id_matrice,
+                                               operatore_previsto, esito)
+                             VALUES ({method_value}, {task_value}, {year_value},
+                                     {month_value}, {matrix_value},
+                                     {opprevisto_value}, {esito_value});",
+                            .con = conn)
+
+  DBI::dbExecute(conn, myquery)
+}

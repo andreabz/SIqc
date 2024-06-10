@@ -45,3 +45,24 @@ decimalplaces <- function(x) {
     return(0)
   }
 }
+
+#' A reactive trigger
+#' @description a reactive trigger. The function is to be assigned to an element and
+#' then the trigger is to be used inside an observeEvent that should start the event.
+#' The depend function is to be used inside the reactive to be re-executed.
+#'
+#' @return two functions: depend and trigger
+#'
+#' @noRd
+makereactivetrigger <- function() {
+  rv <- reactiveValues(a = 0)
+  list(
+    depend = function() {
+      rv$a
+      invisible()
+    },
+    trigger = function() {
+      rv$a <- isolate(rv$a + 1)
+    }
+  )
+}
