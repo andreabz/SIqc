@@ -66,7 +66,7 @@ mod_01_plan_server <- function(id, r_global){
 
     ##### add the action buttons ----
     observeEvent(input_df(), {
-      r_local$df <- add_btns(input_df())
+      r_local$df <- input_df()
       r_local$keep_track_id <- max(r_local$df$id)
     })
 
@@ -74,8 +74,8 @@ mod_01_plan_server <- function(id, r_global){
     output$dt_table <- DT::renderDT(
       r_local$df,
       filter = list(position = 'top', clear = TRUE),
-      colnames = c("Metodo", "Attività", "Anno", "Mese previsto", "Data effettiva",
-                   "Operatore previsto", "Operatore effettivo", "Matrice",
+      colnames = c("id", "Metodo", "Attività", "Anno", "Mese previsto", "Data effettiva",
+                   "Operatore previsto", "Operatore effettivo", "Matrice", "Tipo di campione",
                    "Esito", "Azioni"),
       selection = "none",
       escape = FALSE,
@@ -86,7 +86,7 @@ mod_01_plan_server <- function(id, r_global){
                      columnDefs = list(
                        list(
                          visible = FALSE,
-                         targets = 0 # exclude id column
+                         targets = c(0, 9) # exclude id column and sample type
                        )
                      )
       )
@@ -103,10 +103,10 @@ mod_01_plan_server <- function(id, r_global){
       req(grepl("delete", input$current_id))
 
       # stringi functions are much faster than grepl
-      r_local$dt_row <- r_local$df[which(stringi::stri_detect_regex(r_local$df$actions,
+      r_local$dt_row <- r_local$df[which(stringi::stri_detect_regex(r_local$df$azioni,
                                                          paste0("\\b", input$current_id, "\\b"))), id]
 
-      del_task_id(conn, r_local$dt_row)
+      sql_del_taskid(conn, r_local$dt_row)
       # update data from db
       dbtrigger$trigger()
     })
@@ -117,9 +117,17 @@ mod_01_plan_server <- function(id, r_global){
       req(grepl("edit", input$current_id))
 
       # stringi functions are much faster than grepl
-      idx <- which(stringi::stri_detect_regex(r_local$df$actions, paste0("\\b", input$current_id, "\\b")))
-      r_local$dt_row <- r_local$df[idx, id]
-      r_local$edited_row <- r_local$df[id == r_local$dt_row, .SD, .SDcols = !c("id", "actions")]
+      r_local$dt_row <- r_local$df[which(stringi::stri_detect_regex(r_local$df$azioni,
+                                                                    paste0("\\b", input$current_id, "\\b"))), id]
+      r_local$edited_row <- r_local$df[id == r_local$dt_row,
+                                       .SD,
+                                       .SDcols = c("metodo",
+                                                   "attivita",
+                                                   "anno",
+                                                   "mese_previsto",
+                                                   "tipo_campione",
+                                                   "operatore_previsto")]
+
       modal_dialog(r_local$edited_row, edit = TRUE, conn = conn, id = id)
       r_local$add_or_edit <- NULL
     })
@@ -141,15 +149,12 @@ mod_01_plan_server <- function(id, r_global){
         attivita = input$task,
         anno = input$year |> as.integer(),
         mese_previsto = input$month,
-        data_effettiva = input$date,
         operatore_previsto = input$planned_operator,
-        operatore_effettivo = input$actual_operator,
-        matrice = input$matrix,
-        esito = NA,
-        actions = r_local$df[id == r_local$dt_row, actions]
+        tipo_campione = input$sample_type,
+        azioni = r_local$df[id == r_local$dt_row, azioni]
       )
 
-      modify_task_id(conn, r_local$edited_row, r_local$dt_row)
+      sql_mod_taskid(conn, r_local$edited_row, r_local$dt_row)
       # update data from db
       dbtrigger$trigger()
       shiny::removeModal()
@@ -162,11 +167,8 @@ mod_01_plan_server <- function(id, r_global){
         attivita = NA,
         anno = NA,
         mese_previsto = NA,
-        data_effettiva = NA,
-        operatore_previsto = NA,
-        operatore_effettivo = NA,
-        matrice = NA,
-        esito = NA
+        tipo_campione = NA,
+        operatore_previsto = NA
       )
 
       modal_dialog(empty_row, edit = FALSE, conn = conn, id = id)
@@ -177,21 +179,20 @@ mod_01_plan_server <- function(id, r_global){
     shiny::observeEvent(input$final_edit, {
       shiny::req(r_local$add_or_edit == 1)
 
+      new_rowid <- r_local$keep_track_id + 1
+
       add_row <- list(
-        #id = r_local$keep_track_id + 1,
+        id = new_rowid,
         metodo = input$method,
         attivita = input$task,
         anno = input$year |> as.integer(),
         mese_previsto = input$month,
-        data_effettiva = input$date,
+        tipo_campione = input$sample_type,
         operatore_previsto = input$planned_operator,
-        operatore_effettivo = input$actual_operator,
-        matrice = input$matrix,
-        esito = NA#,
-        #actions = table_btns(r_local$keep_track_id + 1)
+        azione = table_btns(new_rowid)
       )
 
-      add_task(conn, add_row)
+      sql_add_task(conn, add_row)
       dbtrigger$trigger()
 
       shiny::removeModal()
@@ -199,11 +200,11 @@ mod_01_plan_server <- function(id, r_global){
 
     ##### add data ----
     shiny::observeEvent(input$add_data, {
-      sample_ids <- get_sample_id_for_task(conn, r_local$dt_row)
+      sample_ids <- sql_get_sampleid_for_task(conn, r_local$dt_row)
 
       if(sum(!is.na(sample_ids)) == 2){
-        updateSelectInput(session, "sample1", selected = get_sample_name(conn, sample_ids[1]))
-        updateSelectInput(session, "sample2", selected = get_sample_name(conn, sample_ids[2]))
+        updateSelectInput(session, "sample1", selected = sql_get_name(conn, "campione", sample_ids[1]))
+        updateSelectInput(session, "sample2", selected = sql_get_name(conn, "campione", sample_ids[2]))
       }
 
       repeatability_modal(edit = TRUE, conn = conn, id)
@@ -231,8 +232,8 @@ mod_01_plan_server <- function(id, r_global){
           "Campione 1",
           "Campione 2",
           "Differenza",
-          "r",
-          "esito"
+          "Requisito",
+          "Esito"
         ),
         options = list(
           columnDefs = list(
@@ -253,7 +254,7 @@ mod_01_plan_server <- function(id, r_global){
       r_local$sample_results <- DT::editData(r_local$sample_results,
                                              input$dt_data_tbl_cell_edit,
                                              "dt_data_tbl", rownames = FALSE)
-      r_local$sample_results$esito <- ifelse(r_local$sample_results$differenza <= r_local$sample_results$r,
+      r_local$sample_results$esito <- ifelse(r_local$sample_results$differenza <= r_local$sample_results$requisito,
                                              "conforme",
                                              "non conforme")
     })
@@ -268,6 +269,8 @@ mod_01_plan_server <- function(id, r_global){
       shiny::req(!is.null(input$current_id) &
                    grepl("edit", input$current_id) &
                    is.null(r_local$add_or_edit))
+
+      print(r_local$sample_results)
 
 
       ########### AGGIUNGERE AGGIORNAMENTO DB ###############

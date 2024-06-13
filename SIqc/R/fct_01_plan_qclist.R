@@ -85,11 +85,8 @@ modal_dialog <- function(df, edit, conn, id) {
       "attivita",
       "anno",
       "mese_previsto",
-      "data_effettiva",
-      "operatore_previsto",
-      "operatore_effettivo",
-      "matrice",
-      "esito"
+      "tipo_campione",
+      "operatore_previsto"
     )
   )
   stopifnot(is.logical(edit))
@@ -101,11 +98,8 @@ modal_dialog <- function(df, edit, conn, id) {
     mytask <- df$attivita
     myyear <- df$anno
     mymonth <- df$mese_previsto
-    mydate <- df$data_effettiva
     myplanned_operator <- df$operatore_previsto
-    myactual_operator <- df$operatore_effettivo
-    mymatrix <- df$matrice
-    myres <- df$esito
+    mysample_type <- df$tipo_campione
 
   } else {
     mylabel <- "Aggiungi"
@@ -113,11 +107,8 @@ modal_dialog <- function(df, edit, conn, id) {
     mytask <- ""
     myyear <- Sys.Date() |> format("%Y") |> as.factor()
     mymonth <- (Sys.Date() + 31) |> format("%B")
-    mydate <- Sys.Date()
     myplanned_operator <- ""
-    myactual_operator <- ""
-    mymatrix <- ""
-    myres <- ""
+    mysample_type <- ""
 
   }
 
@@ -179,22 +170,6 @@ modal_dialog <- function(df, edit, conn, id) {
       ),
       div(
         style = "display: inline-block;",
-        shiny::dateInput(
-          inputId = ns("date"),
-          label = "Data effettiva",
-          min = "2020-01-01",
-          max = "2060-12-31",
-          startview = "month",
-          language = "it",
-          format = "yyyy-mm-dd",
-          value = mydate,
-          daysofweekdisabled = c(0, 6),
-          weekstart = 1,
-          width = "200px"
-        )
-      ),
-      div(
-        style = "display: inline-block;",
         shiny::textInput(
           inputId = ns("planned_operator"),
           label = "Operatore previsto",
@@ -204,23 +179,13 @@ modal_dialog <- function(df, edit, conn, id) {
       ),
       div(
         style = "display: inline-block;",
-        shiny::textInput(
-          inputId = ns("actual_operator"),
-          label = "Operatore effettivo",
-          value = myactual_operator,
-          width = "200px"
-        )
-      ),
-      div(
-        style = "display: inline-block;",
         shiny::selectInput(
-          inputId = ns("matrix"),
-          label = "Matrice",
-          choices = sql_get_list(conn, "matrice"),
-          selected = mymatrix,
+          inputId = ns("sample_type"),
+          label = "Tipologia di campione",
+          choices = sql_get_list(conn, "tipo_campione"),
+          selected = mysample_type,
           multiple = FALSE,
           selectize = FALSE,
-          # bug https://github.com/rstudio/shiny/issues/3125
           width = "200px"
         )
       )

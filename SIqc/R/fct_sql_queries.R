@@ -7,27 +7,50 @@
 #'
 #' @noRd
 #' @importFrom DBI dbGetQuery
+#' @import data.table
 sql_get_task_summary <- function(conn){
   DBI::dbGetQuery(conn, "SELECT
-                              plan.id_plan AS id,
-                              metodo,
-                              attivita,
-                              anno,
-                              mese AS mese_previsto,
-                              res.data_effettiva,
-                              operatore_previsto,
-                              res.operatore_effettivo,
-                              matrice,
-                              esito FROM plan
-                         INNER JOIN metodo ON plan.id_metodo = metodo.id_metodo
-                         INNER JOIN attivita ON plan.id_attivita = attivita.id_attivita
-                         INNER JOIN anno ON plan.id_anno = anno.id_anno
-                         INNER JOIN mese ON plan.id_mese = mese.id_mese
-                         INNER JOIN matrice ON plan.id_matrice = matrice.id_matrice
-                         LEFT JOIN (
-                          SELECT DISTINCT id_plan, data_effettiva, operatore_effettivo FROM risultati
-                          ) AS res
-                          ON plan.id_plan = res.id_plan;")
+                        pz.pianificazione_id AS id,
+                        metodo,
+                        attivita,
+                        anno,
+                        mese AS mese_previsto,
+                        data_effettiva,
+                        operatore_previsto,
+                        operatore_effettivo,
+                        matrice,
+                        tipo_campione,
+                        esito,
+                        azione AS azioni
+                      FROM pianificazione AS pz
+                      INNER JOIN metodo
+                        ON pz.metodo_id = metodo.metodo_id
+                      INNER JOIN attivita
+                        ON pz.attivita_id = attivita.attivita_id
+                      INNER JOIN anno
+                        ON pz.anno_id = anno.anno_id
+                      INNER JOIN mese
+                        ON pz.mese_id = mese.mese_id
+                      LEFT JOIN
+                        (SELECT DISTINCT
+                          pc.pianificazione_id,
+                          risultato.data_effettiva,
+                          risultato.operatore_effettivo,
+                          risultato.matrice_id
+                         FROM risultato
+                        INNER JOIN pianificazione_campione AS pc
+                          ON risultato.campione_id = pc.campione_id) as eff
+                      ON pz.pianificazione_id = eff.pianificazione_id
+                      LEFT JOIN matrice
+                        ON eff.matrice_id = matrice.matrice_id
+                      LEFT JOIN giudizio
+                        ON pz.pianificazione_id = giudizio.pianificazione_id
+                      LEFT JOIN esito
+                        ON giudizio.esito_id = esito.esito_id
+                      LEFT JOIN tipo_campione AS tc
+                        ON pz.tipo_campione_id = tc.tipo_campione_id
+                    ORDER BY pz.ROWID DESC") |>
+    data.table::data.table()
 }
 
 #' SQL query for unnamed lists
@@ -68,28 +91,36 @@ sql_get_repeatability <- function(conn, sample1, sample2, mytask){
   stopifnot(is.character(sample2))
   stopifnot(is.integer(mytask))
 
-  sample1_id <- get_sample_id(conn, sample1)
-  sample2_id <- get_sample_id(conn, sample2)
+  sample1_id <- sql_get_id(conn, "campione", sample1)
+  sample2_id <- sql_get_id(conn, "campione", sample2)
 
   query <- glue::glue_sql("SELECT
-                        res1.parametro,
-                        res1.udm,
-                        res1.valore AS campione1,
-                        res2.valore AS campione2,
-                        rep.differenza,
-                        rep.r,
-                        rep.esito
-                        FROM plan
-                      LEFT JOIN risultati AS res1 ON plan.id_campione1 = res1.id_campione
-                      LEFT JOIN risultati AS res2 ON plan.id_campione2 = res2.id_campione
-                        AND res2.parametro = res1.parametro
-                      LEFT JOIN ripetibilita AS rep ON plan.id_plan = rep.id_plan
-                        AND res1.parametro = rep.parametro
-                      WHERE (
-                        (plan.id_campione1 = {sample1_id} AND plan.id_campione2 = {sample2_id})
-                          OR (plan.id_campione1 = {sample2_id} AND plan.id_campione2 = {sample1_id})
-                          )
-                        AND plan.id_plan = {mytask};",
+                  par.parametro,
+                  udm.unita_misura,
+                  res1.valore AS campione1,
+                  res2.valore AS campione2,
+                  differenza,
+                  requisito,
+                  esito
+                FROM ripetibilita AS rip
+                INNER JOIN esito AS ex
+                  ON rip.esito_id = ex.esito_id
+                INNER JOIN parametro AS par
+                  ON rip.parametro_id = par.parametro_id
+                INNER JOIN risultato AS res1
+                  ON res1.campione_id = rip.campione1_id
+                  AND res1.parametro_id = rip.parametro_id
+                INNER JOIN risultato AS res2
+                  ON res2.campione_id = rip.campione2_id
+                  AND res2.parametro_id = rip.parametro_id
+                INNER JOIN unita_misura AS udm
+                  ON res1.unita_misura_id = udm.unita_misura_id
+                WHERE
+                  (
+                    (res1.campione_id = {sample1_id} AND res2.campione_id = {sample2_id})
+                    OR (res2.campione_id = {sample1_id} AND res1.campione_id = {sample2_id})
+                  )
+                  AND rip.pianificazione_id = {mytask};",
                           .con = conn)
 
   results <- DBI::dbGetQuery(conn, query) |>
@@ -98,16 +129,21 @@ sql_get_repeatability <- function(conn, sample1, sample2, mytask){
   if(results[, .N] == 0) {
 
     query <- glue::glue_sql("SELECT
-                              a.parametro,
-                              a.udm,
-                              a.valore AS campione1,
-                              b.valore AS campione2
-                             FROM risultati AS a
+                              par.parametro,
+                              udm.unita_misura,
+                              res1.valore AS campione1,
+                              res2.valore AS campione2
+                             FROM risultato AS res1
                             LEFT JOIN (
-                              SELECT id_campione, parametro, valore FROM risultati
-                            ) AS b
-                            ON a.parametro = b.parametro
-                            WHERE a.id_campione = {sample1_id} AND b.id_campione = {sample2_id};",
+                              SELECT campione_id, parametro_id, valore FROM risultato
+                            ) AS res2
+                              ON res1.parametro_id = res2.parametro_id
+                            INNER JOIN parametro AS par
+                              ON res1.parametro_id = par.parametro_id
+                            INNER JOIN unita_misura AS udm
+                              ON res1.unita_misura_id = udm.unita_misura_id
+                            WHERE
+                              res1.campione_id = {sample1_id} AND res2.campione_id = {sample2_id};",
                             .con = conn)
 
     results <- DBI::dbGetQuery(conn, query) |>
@@ -116,25 +152,28 @@ sql_get_repeatability <- function(conn, sample1, sample2, mytask){
     # get the number of decimals
     ndecimal <- lapply(results$campione1, decimalplaces) |> unlist() |> max()
     results[, `:=` (differenza = abs(campione1 - campione2) |> round(ndecimal),
-                        r = rep(NA, .N)  |> as.numeric(),
+                        requisito = rep(NA, .N)  |> as.numeric(),
                         esito = rep(NA, .N)  |> as.numeric()) ]
   }
 
   results
 }
 
-#' SQL query for getting a sample id given a sample name
+#' SQL query for getting an id given an element and table name
 #'
 #' @description retrieve the id associated to a sample name.
 #' @param conn a connection to a database obtained by DBI::dbConnect.
-#' @param sample_name the name of the sample for which the id is to be retrieved.
+#' @param table the name of the SQL table from which the element id should be retrieved.
+#' @param element the name of the element for which the id is to be retrieved.
 #' @return an integer
 #'
 #' @noRd
 #' @importFrom DBI dbGetQuery
 #' @importFrom glue glue_sql
-get_sample_id <- function(conn, sample_name){
-  myquery <- glue::glue_sql("SELECT id_campione FROM campione WHERE campione = {sample_name};",
+sql_get_id <- function(conn, table, element){
+
+  colid <- glue::glue("{table}_id")
+  myquery <- glue::glue_sql("SELECT {`colid`} FROM campione WHERE {`table`} = {element};",
                             .con = conn)
 
   DBI::dbGetQuery(conn, myquery) |>
@@ -142,18 +181,21 @@ get_sample_id <- function(conn, sample_name){
     unname()
 }
 
-#' SQL query for getting a sample name given a sample id
+#' SQL query for getting an element name given a table name and element id
 #'
 #' @description retrieve the name of a sample associate to an id.
 #' @param conn a connection to a database obtained by DBI::dbConnect.
-#' @param sample_id the name of the sample for which the id is to be retrieved.
+#' @param table the name of the SQL table from which the element name should be retrieved.
+#' @param elementid the id of the element for which the id is to be retrieved.
 #' @return a character
 #'
 #' @noRd
 #' @importFrom DBI dbGetQuery
 #' @importFrom glue glue_sql
-get_sample_name <- function(conn, sample_id){
-  myquery <- glue::glue_sql("SELECT campione FROM campione WHERE id_campione = {sample_id};",
+sql_get_name <- function(conn, table, elementid){
+
+  idname <- glue::glue("{table}_id")
+  myquery <- glue::glue_sql("SELECT {`table`} FROM {`table`} WHERE {`idname`} = {elementid};",
                             .con = conn)
 
   DBI::dbGetQuery(conn, myquery) |>
@@ -171,8 +213,11 @@ get_sample_name <- function(conn, sample_id){
 #' @noRd
 #' @importFrom DBI dbGetQuery
 #' @importFrom glue glue_sql
-get_sample_id_for_task <- function(conn, task_id){
-  myquery <- glue::glue_sql("SELECT id_campione1, id_campione2 FROM plan WHERE id_plan = {task_id};",
+sql_get_sampleid_for_task <- function(conn, task_id){
+
+  myquery <- glue::glue_sql("SELECT campione_id
+                              FROM pianificazione_campione
+                              WHERE pianificazione_id = {task_id};",
                             .con = conn)
 
   DBI::dbGetQuery(conn, myquery) |>
@@ -190,8 +235,8 @@ get_sample_id_for_task <- function(conn, task_id){
 #' @noRd
 #' @importFrom DBI dbExecute
 #' @importFrom glue glue_sql
-del_task_id <- function(conn, task_id){
-  myquery <- glue::glue_sql("DELETE FROM plan WHERE id_plan = {task_id};",
+sql_del_taskid <- function(conn, task_id){
+  myquery <- glue::glue_sql("DELETE FROM pianificazione WHERE pianificazione_id = {task_id};",
                             .con = conn)
 
   DBI::dbExecute(conn, myquery)
@@ -208,31 +253,29 @@ del_task_id <- function(conn, task_id){
 #' @noRd
 #' @importFrom DBI dbExecute dbGetQuery
 #' @importFrom glue glue_sql
-modify_task_id <- function(conn, newvalue, task_id){
+sql_mod_taskid <- function(conn, newvalue, task_id){
 
   opprevisto_value <- newvalue$operatore_previsto
-  esito_value <- 1
 
-  method_value <- DBI::dbGetQuery(conn, "SELECT id_metodo FROM metodo WHERE metodo = ?",
+  method_value <- DBI::dbGetQuery(conn, "SELECT metodo_id FROM metodo WHERE metodo = ?",
                                   params = newvalue$metodo)
-  task_value <- DBI::dbGetQuery(conn, "SELECT id_attivita FROM attivita WHERE attivita = ?",
+  task_value <- DBI::dbGetQuery(conn, "SELECT attivita_id FROM attivita WHERE attivita = ?",
                                 params = newvalue$attivita)
-  year_value <- DBI::dbGetQuery(conn, "SELECT id_anno FROM anno WHERE anno = ?",
+  year_value <- DBI::dbGetQuery(conn, "SELECT anno_id FROM anno WHERE anno = ?",
                                 params = newvalue$anno)
-  month_value <- DBI::dbGetQuery(conn, "SELECT id_mese FROM mese WHERE mese = ?",
+  month_value <- DBI::dbGetQuery(conn, "SELECT mese_id FROM mese WHERE mese = ?",
                                  params = newvalue$mese_previsto)
-  matrix_value <- DBI::dbGetQuery(conn, "SELECT id_matrice FROM matrice WHERE matrice = ?",
-                                  params = newvalue$matrice)
+  type_value <- DBI::dbGetQuery(conn, "SELECT tipo_campione_id FROM tipo_campione WHERE tipo_campione = ?",
+                                  params = newvalue$tipo_campione)
 
-  myquery <- glue::glue_sql("UPDATE plan
-                             SET id_metodo = {method_value},
-                                 id_attivita = {task_value},
-                                 id_anno = {year_value},
-                                 id_mese = {month_value},
-                                 id_matrice = {matrix_value},
-                                 operatore_previsto = {opprevisto_value},
-                                 esito = {esito_value}
-                             WHERE id_plan = {task_id};",
+  myquery <- glue::glue_sql("UPDATE pianificazione
+                             SET metodo_id = {method_value},
+                                 attivita_id = {task_value},
+                                 anno_id = {year_value},
+                                 mese_id = {month_value},
+                                 tipo_campione_id = {type_value},
+                                 operatore_previsto = {opprevisto_value}
+                             WHERE pianificazione_id = {task_id};",
                             .con = conn)
 
   DBI::dbExecute(conn, myquery)
@@ -248,28 +291,32 @@ modify_task_id <- function(conn, newvalue, task_id){
 #' @noRd
 #' @importFrom DBI dbExecute dbGetQuery
 #' @importFrom glue glue_sql
-add_task <- function(conn, newvalue){
+sql_add_task <- function(conn, newvalue){
 
   opprevisto_value <- newvalue$operatore_previsto
-  esito_value <- 1
 
-  method_value <- DBI::dbGetQuery(conn, "SELECT id_metodo FROM metodo WHERE metodo = ?",
+  method_value <- DBI::dbGetQuery(conn, "SELECT metodo_id FROM metodo WHERE metodo = ?",
                                   params = newvalue$metodo)
-  task_value <- DBI::dbGetQuery(conn, "SELECT id_attivita FROM attivita WHERE attivita = ?",
+  task_value <- DBI::dbGetQuery(conn, "SELECT attivita_id FROM attivita WHERE attivita = ?",
                                 params = newvalue$attivita)
-  year_value <- DBI::dbGetQuery(conn, "SELECT id_anno FROM anno WHERE anno = ?",
+  year_value <- DBI::dbGetQuery(conn, "SELECT anno_id FROM anno WHERE anno = ?",
                                 params = newvalue$anno)
-  month_value <- DBI::dbGetQuery(conn, "SELECT id_mese FROM mese WHERE mese = ?",
+  month_value <- DBI::dbGetQuery(conn, "SELECT mese_id FROM mese WHERE mese = ?",
                                  params = newvalue$mese_previsto)
-  matrix_value <- DBI::dbGetQuery(conn, "SELECT id_matrice FROM matrice WHERE matrice = ?",
-                                  params = newvalue$matrice)
+  sampletype_value <- DBI::dbGetQuery(conn, "SELECT tipo_campione_id FROM tipo_campione WHERE tipo_campione = ?",
+                                  params = newvalue$tipo_campione)
+  max_id <- DBI::dbGetQuery(conn, "SELECT MAX(pianificazione_id) AS id FROM pianificazione") + 1
+  actions <- table_btns(max_id)
 
-  myquery <- glue::glue_sql("INSERT INTO plan (id_metodo, id_attivita, id_anno,
-                                               id_mese, id_matrice,
-                                               operatore_previsto, esito)
-                             VALUES ({method_value}, {task_value}, {year_value},
-                                     {month_value}, {matrix_value},
-                                     {opprevisto_value}, {esito_value});",
+  myquery <- glue::glue_sql("INSERT INTO pianificazione (
+                                               pianificazione_id, metodo_id,
+                                               attivita_id, anno_id,
+                                               mese_id, tipo_campione_id,
+                                               operatore_previsto, azione)
+                             VALUES ({max_id}, {method_value},
+                                     {task_value}, {year_value},
+                                     {month_value}, {sampletype_value},
+                                     {opprevisto_value}, {actions});",
                             .con = conn)
 
   DBI::dbExecute(conn, myquery)

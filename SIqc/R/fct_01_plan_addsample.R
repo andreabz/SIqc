@@ -69,7 +69,7 @@ repeatability_modal <- function(edit, conn, id) {
         shiny::selectInput(
           inputId = ns("result"),
           label = "Esito",
-          choices = c("conforme", "non conforme"),
+          choices = sql_get_list(conn, "esito"),
           selected = "",
           multiple = FALSE,
           selectize = FALSE,
