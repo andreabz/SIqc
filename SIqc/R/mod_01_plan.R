@@ -237,8 +237,9 @@ mod_01_plan_server <- function(id, r_global){
         ),
         options = list(
           columnDefs = list(
-            list(className = 'dt-left', targets = 0),
-            list(className = 'dt-right', targets = 1)
+            list(className = 'dt-left', targets = 1),
+            list(className = 'dt-right', targets = 2),
+            list(visible = FALSE, targets = 0) # exclude id column
           ),
           dom = 'tp',
           processing = FALSE,
@@ -270,7 +271,14 @@ mod_01_plan_server <- function(id, r_global){
                    grepl("edit", input$current_id) &
                    is.null(r_local$add_or_edit))
 
-      print(r_local$sample_results)
+      print(
+        sql_mod_repeatability(conn,
+                              sample1 = input$sample1,
+                              sample2 = input$sample2,
+                              mytask = r_local$dt_row,
+                              mydata = r_local$sample_results)
+      )
+
 
 
       ########### AGGIUNGERE AGGIORNAMENTO DB ###############

@@ -95,6 +95,7 @@ sql_get_repeatability <- function(conn, sample1, sample2, mytask){
   sample2_id <- sql_get_id(conn, "campione", sample2)
 
   query <- glue::glue_sql("SELECT
+                  rip.ripetibilita_id,
                   par.parametro,
                   udm.unita_misura,
                   res1.valore AS campione1,
@@ -128,7 +129,7 @@ sql_get_repeatability <- function(conn, sample1, sample2, mytask){
 
   if(results[, .N] == 0) {
 
-    query <- glue::glue_sql("SELECT
+     query <- glue::glue_sql("SELECT
                               par.parametro,
                               udm.unita_misura,
                               res1.valore AS campione1,
@@ -146,8 +147,17 @@ sql_get_repeatability <- function(conn, sample1, sample2, mytask){
                               res1.campione_id = {sample1_id} AND res2.campione_id = {sample2_id};",
                             .con = conn)
 
-    results <- DBI::dbGetQuery(conn, query) |>
-      data.table::data.table()
+     maxid <- DBI::dbGetQuery(conn, "SELECT
+                                      MAX(ripetibilita_id) as ripetibilita_id
+                                    FROM ripetibilita")
+
+    res_query <- DBI::dbGetQuery(conn, query)
+
+    # adding index
+    lengthid <- length(res_query$parametro)
+    newids <- seq.int(maxid$ripetibilita_id, length.out = lengthid)
+    names(newids) <- "ripetibilita_id"
+    results <- data.table::data.table(cbind(newids, res_query))
 
     # get the number of decimals
     ndecimal <- lapply(results$campione1, decimalplaces) |> unlist() |> max()
@@ -320,4 +330,56 @@ sql_add_task <- function(conn, newvalue){
                             .con = conn)
 
   DBI::dbExecute(conn, myquery)
+}
+
+#' SQL query for modifying repeatability sample results
+#'
+#' @description get a data.frame of sample results for reapeatability.
+#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param sample1 a character string with the name of the sample.
+#' @param sample2 a character string with the name of the sample.
+#' @param mytask id of the task to be evaluated.
+#' @param mydata new data to be stored in the repeatability table.
+#'
+#' @return a data.frame
+#'
+#' @noRd
+#' @importFrom DBI dbGetQuery dbExecute
+#' @importFrom glue glue_sql
+#' @import data.table
+sql_mod_repeatability <- function(conn,
+                                  sample1,
+                                  sample2,
+                                  mytask,
+                                  mydata){
+
+  stopifnot(c("differenza", "requisito") %in% colnames(mydata))
+
+  sample1_id <- sql_get_id(conn, "campione", sample1)
+  sample2_id <- sql_get_id(conn, "campione", sample2)
+
+  # normalising the table results before updating the results
+  normaltable <-DBI::dbGetQuery(conn,
+                                "SELECT
+                                  ripetibilita_id,
+                                  par.parametro_id,
+                                  ex.esito_id,
+                                  differenza,
+                                  requisito
+                                FROM ripetibilita AS rip
+                                INNER JOIN parametro AS par
+                                  ON rip.parametro_id = par.parametro_id
+                                INNER JOIN esito AS ex
+                                  ON rip.esito = ex.esito
+                                ")
+
+  normaltable |> data.table::data.table()
+  tablelength <- normaltable[, .N]
+  normaltable[, `:=` (campione1_id = rep(sample1_id, tablelength),
+                      campione2_id = rep(sample2_id, tablelength),
+                      pianificazione_id = rep(mytask, tablelength),
+                      differenza_su_requisito = differenza / requisito)]
+  normaltable[, .(ripetibilita_id, campione1_id, campione2_id,
+                  pianificazione_id, parametro_id, esito_id,
+                  differenza, requisito, differenza_su_requisito)]
 }
