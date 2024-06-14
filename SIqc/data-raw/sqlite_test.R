@@ -174,6 +174,19 @@ DBI::dbExecute(conn, "CREATE TABLE giudizio(
                 );")
 DBI::dbWriteTable(conn, "giudizio", giudizio_csv, append = TRUE)
 
+#### ripetibilita_tmp table ----
+DBI::dbExecute(conn, "CREATE TABLE ripetibilita_tmp(
+                ripetibilita_id integer PRIMARY KEY,
+                campione1 text NOT NULL REFERENCES campione(campione),
+                campione2 text NOT NULL REFERENCES campione(campione),
+                pianificazione_id integer NOT NULL REFERENCES pianificazione(pianificazione_id),
+                parametro text NOT NULL REFERENCES parametro(parametro),
+                esito text NOT NULL REFERENCES esito(esito),
+                differenza real,
+                requisito real,
+                differenza_su_requisito real
+                );")
+
 DBI::dbGetQuery(conn, "SELECT
                         metodo,
                         attivita,
