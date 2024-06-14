@@ -225,7 +225,7 @@ mod_01_plan_server <- function(id, r_global){
         filter = "none",
         selection = "none",
         rownames = FALSE,
-        editable = list(target = "column", disable = list(columns = c(0, 1, 2, 3, 4, 6))),
+        editable = list(target = "column", disable = list(columns = c(0, 1, 2, 3, 4, 5))),
         colnames = c(
           "Parametro",
           "Unità di misura",
@@ -271,14 +271,11 @@ mod_01_plan_server <- function(id, r_global){
                    grepl("edit", input$current_id) &
                    is.null(r_local$add_or_edit))
 
-      print(
-        sql_mod_repeatability(conn,
+     sql_mod_repeatability(conn,
                               sample1 = input$sample1,
                               sample2 = input$sample2,
                               mytask = r_local$dt_row,
-                              mydata = r_local$sample_results)
-      )
-
+                              mydata = r_local$sample_results) |> print()
 
 
       ########### AGGIUNGERE AGGIORNAMENTO DB ###############

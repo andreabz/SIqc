@@ -155,9 +155,9 @@ sql_get_repeatability <- function(conn, sample1, sample2, mytask){
 
     # adding index
     lengthid <- length(res_query$parametro)
-    newids <- seq.int(maxid$ripetibilita_id, length.out = lengthid)
+    newids <- seq.int(maxid$ripetibilita_id + 1, length.out = lengthid)
     names(newids) <- "ripetibilita_id"
-    results <- data.table::data.table(cbind(newids, res_query))
+    results <- data.table::data.table(ripetibilita_id = newids, res_query)
 
     # get the number of decimals
     ndecimal <- lapply(results$campione1, decimalplaces) |> unlist() |> max()
@@ -355,31 +355,45 @@ sql_mod_repeatability <- function(conn,
 
   stopifnot(c("differenza", "requisito") %in% colnames(mydata))
 
-  sample1_id <- sql_get_id(conn, "campione", sample1)
-  sample2_id <- sql_get_id(conn, "campione", sample2)
+  mydata[, `:=` (campione1 = rep(sample1, .N),
+                 campione2 = rep(sample2, .N),
+                 pianificazione_id = rep(mytask, .N),
+                 differenza_su_requisito = (differenza / requisito) |> round(2))]
+  newdata <- mydata[, .(ripetibilita_id, campione1, campione2,
+                        pianificazione_id, parametro, esito,
+                        differenza, requisito, differenza_su_requisito)]
+  DBI::dbWriteTable(conn, "ripetibilita_tmp", newdata, append = TRUE)
 
-  # normalising the table results before updating the results
-  normaltable <-DBI::dbGetQuery(conn,
-                                "SELECT
-                                  ripetibilita_id,
-                                  par.parametro_id,
-                                  ex.esito_id,
-                                  differenza,
-                                  requisito
-                                FROM ripetibilita AS rip
-                                INNER JOIN parametro AS par
-                                  ON rip.parametro_id = par.parametro_id
-                                INNER JOIN esito AS ex
-                                  ON rip.esito = ex.esito
-                                ")
+  res <- DBI::dbGetQuery(conn, "SELECT
+                          tmp.ripetibilita_id,
+                          cmp1.campione_id AS campione1_id,
+                          cmp2.campione_id AS campione2_id,
+                          tmp.pianificazione_id,
+                          par.parametro_id,
+                          ex.esito_id,
+                          tmp.differenza,
+                          tmp.requisito,
+                          tmp.differenza_su_requisito
+                         FROM ripetibilita_tmp AS tmp
+                        --- UPDATE ripetibilita
+                        --- SET ripetibilita.ripetibilita_id = tmp.ripetibilita_id,
+                        ---     ripetibilita.campione1_id = cmp1.campione_id,
+                        ---     ripetibilita.campione2_id = cmp2.campione_id,
+                        ---     ripetibilita.pianificazione_id = tmp.pianificazione_id,
+                        ---     ripetibilita.parametro_id = par.parametro_id,
+                        ---     ripetibilita.esito_id = ex.esito_id,
+                        ---     ripetibilita.differenza = tmp.differenza,
+                        ---     ripetibilita.requsitio = tmp.requisito,
+                        ---     ripetibilita.differenza_su_requisito = tmp.differenza_su_requisito
+                        INNER JOIN campione AS cmp1
+                          ON tmp.campione1 = cmp1.campione
+                        INNER JOIN campione AS cmp2
+                          ON tmp.campione2 = cmp2.campione
+                        INNER JOIN parametro AS par
+                          ON tmp.parametro = par.parametro
+                        INNER JOIN esito AS ex
+                          ON tmp.esito = ex.esito")
 
-  normaltable |> data.table::data.table()
-  tablelength <- normaltable[, .N]
-  normaltable[, `:=` (campione1_id = rep(sample1_id, tablelength),
-                      campione2_id = rep(sample2_id, tablelength),
-                      pianificazione_id = rep(mytask, tablelength),
-                      differenza_su_requisito = differenza / requisito)]
-  normaltable[, .(ripetibilita_id, campione1_id, campione2_id,
-                  pianificazione_id, parametro_id, esito_id,
-                  differenza, requisito, differenza_su_requisito)]
+  DBI::dbExecute(conn, "DELETE FROM ripetibilita_tmp")
+  res
 }
