@@ -272,10 +272,10 @@ mod_01_plan_server <- function(id, r_global){
                    is.null(r_local$add_or_edit))
 
      sql_mod_repeatability(conn,
-                              sample1 = input$sample1,
-                              sample2 = input$sample2,
-                              mytask = r_local$dt_row,
-                              mydata = r_local$sample_results) |> print()
+                           sample1 = input$sample1,
+                           sample2 = input$sample2,
+                           mytask = r_local$dt_row,
+                           mydata = r_local$sample_results)
 
 
       ########### AGGIUNGERE AGGIORNAMENTO DB ###############

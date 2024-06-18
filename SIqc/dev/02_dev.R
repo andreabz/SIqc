@@ -28,6 +28,7 @@ golem::add_module(name = "02_results", with_test = TRUE) # Name of the module
 golem::add_fct("01_plan_qclist", with_test = TRUE)
 golem::add_fct("01_plan_addsample", with_test = TRUE)
 golem::add_fct("sql_queries", with_test = TRUE)
+golem::add_fct("repeatability", with_test = TRUE)
 golem::add_utils("helpers", with_test = TRUE)
 
 ## External resources
