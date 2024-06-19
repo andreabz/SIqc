@@ -1,30 +1,55 @@
-#' repeatablity sample
+#' repeatability assessment DT
+#'
+#' @description A DT table for assessing the repeatability of a measurement.
+#' @param data data to be included in the DT.
+#'
+#' @return A renderDT function
+#'
+#' @noRd
+#' @importFrom DT renderDT
+repeatabilityDT <- function(data){
+  stopifnot(is.data.frame(data))
+  stopifnot(dim(data)[2] == 8)
+
+  DT::renderDT(
+    data,
+    filter = "none",
+    selection = "none",
+    rownames = FALSE,
+    editable = list(target = "column", disable = list(columns = c(0, 1, 2, 3, 4, 5))),
+    colnames = c(
+      "Parametro",
+      "Unità di misura",
+      "Campione 1",
+      "Campione 2",
+      "Differenza",
+      "Requisito",
+      "Esito"
+    ),
+    options = list(
+      columnDefs = list(
+        list(className = 'dt-left', targets = 1),
+        list(className = 'dt-right', targets = 2),
+        list(visible = FALSE, targets = 0) # exclude id column
+      ),
+      dom = 'tp',
+      processing = FALSE,
+      language = dt_italian
+    )
+  )
+
+}
+
+#' modal dialog for repeatablity
 #'
 #' @description a modal dialog for repeatability calculations and results.
-#' @param df a data.frame with columns 'data_effettiva',
-#' 'operatore_effettivo', 'matrice,
-#' @param edit logical. TRUE for editing and FALSE for adding a new record.
 #' @param conn a DBI::dbConnect object
 #' @param id session information
 #' @return A dataframe with sample results and repeatability calculations.
 #'
 #' @noRd
 #' @importFrom DT datatable
-repeatability_modal <- function(edit, conn, id) {
-  # stopifnot(is.data.frame(df))
-  # stopifnot(
-  #   colnames(df) == c(
-  #     "metodo",
-  #     "attivita",
-  #     "anno",
-  #     "mese_previsto",
-  #     "data_effettiva",
-  #     "operatore_previsto",
-  #     "operatore_effettivo",
-  #     "matrice",
-  #     "esito"
-  #   )
-  # )
+repeatability_modal <- function(conn, id) {
 
   ns <- NS(id)
 

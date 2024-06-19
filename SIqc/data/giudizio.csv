@@ -1,4 +1,4 @@
-giudizio_id; pianificazione_id; esito_id; commento_id
+giudizio_id; pianificazione_id; esito_id; commento
 1;1;1;
 2;2;1;
 3;3;1;

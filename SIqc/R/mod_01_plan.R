@@ -71,27 +71,9 @@ mod_01_plan_server <- function(id, r_global){
     })
 
     ###### tasks table -----
-    output$dt_table <- DT::renderDT(
-      r_local$df,
-      filter = list(position = 'top', clear = TRUE),
-      colnames = c("id", "Metodo", "Attività", "Anno", "Mese previsto", "Data effettiva",
-                   "Operatore previsto", "Operatore effettivo", "Matrice", "Tipo di campione",
-                   "Esito", "Azioni"),
-      selection = "none",
-      escape = FALSE,
-      rownames = FALSE,
-      callback = DT::JS('$(\'div.has-feedback input[type="search"]\').attr( "placeholder", "Tutti" )'),
-      options = list(processing = FALSE,
-                     language = dt_italian,
-                     columnDefs = list(
-                       list(
-                         visible = FALSE,
-                         targets = c(0, 9) # exclude id column and sample type
-                       )
-                     )
-      )
-    )
-
+    output$dt_table <- renderDT({
+      qclistDT(r_local$df)
+      })
     proxy <- DT::dataTableProxy("dt_table")
     shiny::observeEvent(r_local$df, {
       DT::replaceData(proxy, r_local$df, resetPaging = FALSE, rownames = FALSE)
@@ -207,7 +189,12 @@ mod_01_plan_server <- function(id, r_global){
         updateSelectInput(session, "sample2", selected = sql_get_name(conn, "campione", sample_ids[2]))
       }
 
-      repeatability_modal(edit = TRUE, conn = conn, id)
+      updateSelectInput(session, "result",
+                        selected = sql_get_result_for_task(conn, taskid = r_local$dt_row))
+      updateSelectInput(session, "comment",
+                        selected = sql_get_comment_for_task(conn, taskid = r_local$dt_row))
+
+      repeatability_modal(conn = conn, id)
       shiny::removeModal()
     })
 
@@ -220,32 +207,7 @@ mod_01_plan_server <- function(id, r_global){
 
     output$dt_data <- renderUI({
 
-      output$dt_data_tbl <- DT::renderDT(
-        r_local$sample_results,
-        filter = "none",
-        selection = "none",
-        rownames = FALSE,
-        editable = list(target = "column", disable = list(columns = c(0, 1, 2, 3, 4, 5))),
-        colnames = c(
-          "Parametro",
-          "Unità di misura",
-          "Campione 1",
-          "Campione 2",
-          "Differenza",
-          "Requisito",
-          "Esito"
-        ),
-        options = list(
-          columnDefs = list(
-            list(className = 'dt-left', targets = 1),
-            list(className = 'dt-right', targets = 2),
-            list(visible = FALSE, targets = 0) # exclude id column
-          ),
-          dom = 'tp',
-          processing = FALSE,
-          language = dt_italian
-        )
-    )
+      output$dt_data_tbl <- repeatabilityDT(r_local$sample_results)
       DT::DTOutput(ns("dt_data_tbl"))
     })
 
@@ -277,9 +239,12 @@ mod_01_plan_server <- function(id, r_global){
                            mytask = r_local$dt_row,
                            mydata = r_local$sample_results)
 
+     sql_mod_result(conn,
+                    result = input$result,
+                    comment = input$comment,
+                    mytask = r_local$dt_row)
 
-      ########### AGGIUNGERE AGGIORNAMENTO DB ###############
-      # update data from db
+
       dbtrigger$trigger()
       shiny::removeModal()
     })

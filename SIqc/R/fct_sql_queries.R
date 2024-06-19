@@ -385,8 +385,10 @@ sql_mod_repeatability <- function(conn,
                         pianificazione_id, parametro, esito,
                         differenza, requisito, differenza_su_requisito)]
 
+  # write the new data to a tmp SQL table
   DBI::dbWriteTable(conn, "ripetibilita_tmp", newdata, append = TRUE)
 
+  # normalise the new data
   res <- DBI::dbGetQuery(conn, "SELECT
                           tmp.ripetibilita_id,
                           cmp1.campione_id AS campione1_id,
@@ -407,77 +409,78 @@ sql_mod_repeatability <- function(conn,
                         INNER JOIN esito AS ex
                           ON tmp.esito = ex.esito")
 
+  # remove the tmp SQL table
   DBI::dbExecute(conn, "DELETE FROM ripetibilita_tmp")
 
+  # get the max id for the results table
   maxid <- DBI::dbGetQuery(conn, "SELECT MAX(ripetibilita_id) FROM ripetibilita") |>
     unlist() |>
     unname()
 
+  # for new data to be added to the results table
   if(min(res$ripetibilita_id) > maxid){
 
-    # to be extracted and generalised to other tables
-    insert_into <- function(i, data) {
+    # adding the new results
+    tblname <- "ripetibilita"
+    mycols <- DBI::dbListFields(conn, tblname)
 
-      cols <- DBI::dbListFields(conn, "ripetibilita")
-      sql_cols <- glue("(", glue::glue_collapse(cols, sep = ", "), ")") |> glue::glue_sql()
-      sql_vals <- paste0("(", data[i, ] |> glue::glue_collapse(sep = ", "), ")") |> glue::glue_sql()
+    lapply(seq_len(nrow(res)), function(x) {
+      myvals <- res[x, ]
 
-      insert_query <- glue::glue_sql(.con = conn,
-                                     "INSERT INTO ripetibilita {sql_cols}
-                                    VALUES {sql_vals}")
-      DBI::dbExecute(conn, insert_query)
+      sql_insert(
+        conn = conn,
+        tbl = tblname,
+        cols = mycols,
+        vals = myvals
+      )
+    })
 
-    }
-
-    lapply(seq_len(nrow(res)), function(x) insert_into(x, res))
-
+    # adding the samples to the new plan id
     sample1_id <- sql_get_id(conn, "campione", sample1)
     sample2_id <- sql_get_id(conn, "campione", sample2)
     sample_id <- c(sample1_id, sample2_id)
+    tblname <- "pianificazione_campione"
+    mycols <- c("pianificazione_id", "campione_id")
 
-    add_samples <- function(i, data, mytaskid) {
-      id <- data[i]
+    lapply(seq_len(length(sample_id)), function(x) {
+      myvals <- c(mytask, sample_id[x])
 
-      cols <- c("pianificazione_id", "campione_id")
-      sql_cols <- paste0("(", glue::glue_collapse(cols, sep = ", "), ")") |> glue::glue_sql()
-      pianificazione_campione_query <- glue::glue_sql(.con = conn,
-                                                     "INSERT INTO pianificazione_campione
-                                                     {sql_cols}
-                                                    VALUES ({mytaskid}, {id})")
-      DBI::dbExecute(conn, pianificazione_campione_query)
-    }
+      sql_insert(
+        conn = conn,
+        tbl = tblname,
+        cols = mycols,
+        vals = myvals
+      )
+    })
 
-    lapply(seq_len(length(sample_id)), function(x) add_samples(x, sample_id, mytask))
-
+  # for updating existing columns
   } else {
 
-    update_val <- function(i, data){
-      sel_row <- data[i,]
-      id <- data[i, 1]
+    tblname <- "ripetibilita"
+    mycols <- DBI::dbListFields(conn, tblname)[-1]
 
-      cols <- DBI::dbListFields(conn, "ripetibilita")[-1]
+    lapply(seq_len(nrow(res)), function(x){
+      myvals <- res[x, ]
+      mycondval <- res[x, 1]
 
-      sql_cols <- lapply(cols, function(x, data = sel_row) {
-        val <- data[[x]]
+      sql_update(
+        conn = conn,
+        tbl = tblname,
+        cols = mycols,
+        vals = myvals,
+        condcol = "ripetibilita_id",
+        condval = mycondval
+      )
+    })
 
-        glue::glue("{`x`} = {val}")
-        }) |>
-        glue::glue_sql_collapse(sep = ", ")
-
-      update_query <- glue::glue_sql(.con = conn,
-                                     "UPDATE ripetibilita
-                                      SET {sql_cols}
-                                      WHERE ripetibilita_id = {id};")
-
-      DBI::dbExecute(conn, update_query)
-    }
-
-    lapply(seq_len(nrow(res)), function(x) update_val(x, res))
-
+    # updating samples for the modified plan id
     sample1_id <- sql_get_id(conn, "campione", sample1)
     sample2_id <- sql_get_id(conn, "campione", sample2)
     sample_id <- c(sample1_id, sample2_id)
-
+    tblname <- "pianificazione_campione"
+    mycols <- c("pianificazione_id", "campione_id")
+    vals <- data.frame(pianificazione_id = rep(mytask, 2),
+                       campione_id = sample_id)
     pianificazione_campione_id <- DBI::dbGetQuery(conn, "SELECT pianificazione_campione_id
                                                   FROM pianificazione_campione
                                                   WHERE pianificazione_id = ?;",
@@ -485,21 +488,19 @@ sql_mod_repeatability <- function(conn,
       unlist() |>
       unname()
 
-    update_samples <- function(i, data, mytaskid) {
-      id <- data[i]
-      idtask <- mytaskid[i]
+    lapply(seq_len(length(sample_id)), function(x){
+      myvals <- vals[x, ]
+      mycondval <- pianificazione_campione_id[x]
 
-      cols <- c("campione_id")
-      sql_cols <- glue::glue("{`cols`} = {id}") |> glue::glue_sql()
-      pianificazione_campione_query <- glue::glue_sql(.con = conn,
-                                                      "UPDATE pianificazione_campione
-                                                        SET {sql_cols}
-                                                       WHERE pianificazione_campione_id = {idtask};")
-
-      DBI::dbExecute(conn, pianificazione_campione_query)
-    }
-
-    lapply(seq_len(length(sample_id)), function(x) update_samples(x, sample_id, pianificazione_campione_id))
+      sql_update(
+        conn = conn,
+        tbl = tblname,
+        cols = mycols,
+        vals = myvals,
+        condcol = "pianificazione_campione_id",
+        condval = mycondval
+      )
+    })
 
   }
 
@@ -518,22 +519,214 @@ sql_mod_repeatability <- function(conn,
 #'
 #' @noRd
 #' @importFrom DBI dbGetQuery dbExecute
-#' @importFrom glue glue_sql
-#' @import data.table
+#' @importFrom glue glue_sql glue_sql_collapse
 sql_insert <- function(conn, tbl, cols, vals){
+
+  # for properly quoting only character arguments
+  myvals <- lapply(vals, function(x) {
+    if(is.character(x)){
+      glue::glue_sql("{as.character(x)}", .con = conn)
+    } else {
+      glue::glue_sql("{x}", .con = conn)
+    }
+  }) |>
+    unlist() |>
+    glue::glue_sql_collapse(sep = ", ")
 
   sql_cols <- paste0("(",
                      glue::glue_sql_collapse({`cols`}, sep = ","),
                      ")") |> glue::glue_sql()
 
-  sql_vals <- paste0("(",
-                     glue::glue_sql_collapse({vals}, sep = ","),
-                     ")") |> glue::glue_sql()
+  sql_vals <- glue::glue_sql("({myvals})")
+
+  print(sql_vals)
 
   sql_query <- glue::glue_sql(.con = conn,
                               "INSERT INTO {`tbl`}
                                {sql_cols}
                                VALUES {sql_vals};")
+  print(sql_query)
 
   DBI::dbExecute(conn, sql_query)
+}
+
+#' SQL code for updating the data
+#'
+#' @description The function updates the database using SQL code.
+#' @param conn connection object.
+#' @param tbl the name of the table in which the data is to be updated.
+#' @param cols the name of the fields for which the data to be updated has been provided.
+#' @param vals the new values to update the dataset.
+#' @param condcol the column name on which the WHERE condition is set.
+#' @param condval the value on which the WHERE condition is set.
+#'
+#' @return no output
+#'
+#' @noRd
+#' @importFrom DBI dbGetQuery dbExecute
+#' @importFrom glue glue_sql glue_sql_collapse
+sql_update <- function(conn, tbl, cols, vals, condcol, condval){
+
+  sql_cols <- lapply(cols, function(x, data = vals) {
+    val <- data[[x]]
+
+    if(is.character(val)){
+      glue::glue_sql("{`x`} = {as.character(val)}", .con = conn)
+    }
+
+    glue::glue_sql("{`x`} = {val}", .con = conn)
+  }) |> glue::glue_sql_collapse(sep = ", ")
+
+  if(is.character(condval)){
+    condval <- as.character(condval)
+  }
+
+  sql_query <- glue::glue_sql(.con = conn,
+                              "UPDATE {`tbl`}
+                               SET {sql_cols}
+                               WHERE {`condcol`} = {condval};")
+
+  DBI::dbExecute(conn, sql_query)
+}
+
+#' SQL query for modifying task activity result
+#'
+#' @description get a data.frame of sample results for reapeatability.
+#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param result a character string with the result of the task.
+#' @param comment a character string with the comment of the task.
+#' @param mytask id of the task to be evaluated.
+#'
+#' @return a data.frame
+#'
+#' @noRd
+#' @importFrom DBI dbGetQuery dbExecute
+#' @importFrom glue glue_sql
+#' @import data.table
+sql_mod_result <- function(conn,
+                           result,
+                           comment,
+                           mytask){
+
+  id <- DBI::dbGetQuery(conn,
+                        "SELECT giudizio_id FROM giudizio WHERE pianificazione_id = ?",
+                        params = mytask)
+  maxid <- DBI::dbGetQuery(conn,
+                           "SELECT MAX(giudizio_id) FROM giudizio")
+
+  if(nrow(id) == 0) {
+    id <- 1 + maxid |>
+      unlist() |>
+      unname()
+  }
+
+  newdata <- data.frame(giudizio_id = id,
+                        pianificazione_id = mytask,
+                        esito = result,
+                        commento = comment)
+
+  # write the new data to a tmp SQL table
+  DBI::dbWriteTable(conn, "giudizio_tmp", newdata, append = TRUE)
+
+  # normalise the new data
+  res <- DBI::dbGetQuery(conn,
+                        "SELECT
+                          tmp.giudizio_id,
+                          tmp.pianificazione_id,
+                          ex.esito_id,
+                          tmp.commento
+                          FROM giudizio_tmp AS tmp
+                         INNER JOIN esito AS ex
+                          ON tmp.esito = ex.esito")
+
+  # remove the tmp SQL table
+  DBI::dbExecute(conn, "DELETE FROM giudizio_tmp")
+
+    # for new data to be added to the results table
+  if(id > maxid){
+
+    # adding the new results
+    tblname <- "giudizio"
+    mycols <- DBI::dbListFields(conn, tblname)
+
+    lapply(seq_len(nrow(res)), function(x) {
+      myvals <- res[x, ]
+
+      sql_insert(
+        conn = conn,
+        tbl = tblname,
+        cols = mycols,
+        vals = myvals
+      )
+    })
+
+    # for updating existing columns
+  } else {
+
+    tblname <- "giudizio"
+    mycols <- DBI::dbListFields(conn, tblname)[-1]
+
+    lapply(seq_len(nrow(res)), function(x){
+      myvals <- res[x, ]
+      mycondval <- res[x, 1]
+
+      sql_update(
+        conn = conn,
+        tbl = tblname,
+        cols = mycols,
+        vals = myvals,
+        condcol = "giudizio_id",
+        condval = mycondval
+      )
+    })
+
+  }
+
+  res
+}
+
+#' SQL query for getting the result associated to a task id
+#'
+#' @description retrieve the result associated to a task id.
+#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param taskid the id of the element for which the id is to be retrieved.
+#' @return a character
+#'
+#' @noRd
+#' @importFrom DBI dbGetQuery
+#' @importFrom glue glue_sql
+sql_get_result_for_task <- function(conn, taskid){
+
+  myquery <- glue::glue_sql("SELECT esito
+                             FROM esito
+                             JOIN giudizio
+                             ON esito.esito_id = giudizio.esito_id
+                             WHERE pianificazione_id = {taskid};",
+                            .con = conn)
+
+  DBI::dbGetQuery(conn, myquery) |>
+    unlist() |>
+    unname()
+}
+
+#' SQL query for getting the comment associated to a task id
+#'
+#' @description retrieve the result associated to a task id.
+#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param taskid the id of the element for which the id is to be retrieved.
+#' @return a character
+#'
+#' @noRd
+#' @importFrom DBI dbGetQuery
+#' @importFrom glue glue_sql
+sql_get_comment_for_task <- function(conn, taskid){
+
+  myquery <- glue::glue_sql("SELECT commento
+                             FROM giudizio
+                             WHERE pianificazione_id = {taskid};",
+                            .con = conn)
+
+  DBI::dbGetQuery(conn, myquery) |>
+    unlist() |>
+    unname()
 }

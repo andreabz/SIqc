@@ -22,7 +22,6 @@ conn <- DBI::dbConnect(RSQLite::SQLite(), "./data/sqlite_test.db", extended_type
 pianificazione_csv <- read.csv2(here::here("data/pianificazione.csv"))
 risultato_csv <- read.csv2(here::here("data/risultato.csv"))
 ripetibilita_csv <- read.csv2(here::here("data/ripetibilita.csv"))
-commento_csv <- read.csv2(here::here("data/commento.csv"))
 esito_csv <- read.csv2(here::here("data/esito.csv"))
 parametro_csv <- read.csv2(here::here("data/parametro.csv"))
 attivita_csv <- read.csv2(here::here("data/attivita.csv"))
@@ -77,15 +76,6 @@ DBI::dbExecute(conn, "CREATE TABLE ripetibilita(
                 differenza_su_requisito real
                 );")
 DBI::dbWriteTable(conn, "ripetibilita", ripetibilita_csv, append = TRUE)
-
-#### commento table ----
-DBI::dbExecute(conn, "CREATE TABLE commento(
-                commento_id integer PRIMARY KEY AUTOINCREMENT,
-                pianificazione_id integer NOT NULL REFERENCES pianificazione(pianificazione_id),
-                esito_id integer NOT NULL REFERENCES esito(esito_id),
-                commento text
-                );")
-DBI::dbWriteTable(conn, "commento", commento_csv, append = TRUE)
 
 #### esito table ----
 DBI::dbExecute(conn, "CREATE TABLE esito(
@@ -170,7 +160,7 @@ DBI::dbExecute(conn, "CREATE TABLE giudizio(
                 giudizio_id integer PRIMARY KEY AUTOINCREMENT,
                 pianificazione_id integer REFERENCES pianificazione(pianificazione_id),
                 esito_id integer REFERENCES esito(esito_id),
-                commento_id integer REFERENCES commento(commento_id)
+                commento text
                 );")
 DBI::dbWriteTable(conn, "giudizio", giudizio_csv, append = TRUE)
 
@@ -185,6 +175,14 @@ DBI::dbExecute(conn, "CREATE TABLE ripetibilita_tmp(
                 differenza real,
                 requisito real,
                 differenza_su_requisito real
+                );")
+
+#### giudizio_tmp table ----
+DBI::dbExecute(conn, "CREATE TABLE giudizio_tmp(
+                giudizio_id integer PRIMARY KEY AUTOINCREMENT,
+                pianificazione_id integer REFERENCES pianificazione(pianificazione_id),
+                esito text REFERENCES esito(esito),
+                commento text
                 );")
 
 DBI::dbGetQuery(conn, "SELECT

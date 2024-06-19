@@ -8,13 +8,13 @@
 #' @noRd
 table_btns <- function(x) {
   paste0(
-      '<div class = "btn-group">
+    '<div class = "btn-group">
       <button class="btn btn-default action-button btn-info action_button" id="edit_',
-      x,
-      '" type="button" onclick=get_id(this.id)><i class="fas fa-edit"></i></button>
+    x,
+    '" type="button" onclick=get_id(this.id)><i class="fas fa-edit"></i></button>
       <button class="btn btn-default action-button btn-danger action_button" id="delete_',
-      x,
-      '" type="button" onclick=get_id(this.id)><i class="fa fa-trash-alt"></i></button></div>'
+    x,
+    '" type="button" onclick=get_id(this.id)><i class="fa fa-trash-alt"></i></button></div>'
   )
 }
 
@@ -30,8 +30,8 @@ table_btns <- function(x) {
 #' @import data.table
 add_btns <- function(df) {
 
-    dt <- data.table::data.table(df)
-    dt[, actions := table_btns(id)]
+  dt <- data.table::data.table(df)
+  dt[, actions := table_btns(id)]
 }
 
 #' Prepare the dataset
@@ -63,7 +63,7 @@ prepare_tasks_summary <- function(df){
                        no = ifelse(data$esito == 1,
                                    yes = "conforme",
                                    no = "non conforme")
-                       ) |> as.factor()
+  ) |> as.factor()
   data
 }
 
@@ -221,4 +221,50 @@ modal_dialog <- function(df, edit, conn, id) {
       )
     )
   ) |> shiny::showModal()
+}
+
+#' QC task DT list
+#'
+#' @description A DT table with a list of QC tasks.
+#' @param data data to be included in the DT.
+#'
+#' @return A renderDT function
+#'
+#' @noRd
+#' @importFrom DT datatable
+qclistDT <- function(data) {
+  stopifnot(is.data.frame(data))
+  stopifnot(dim(data)[2] == 12)
+
+  DT::datatable(
+    data,
+    filter = list(position = 'top', clear = TRUE),
+    colnames = c(
+      "id",
+      "Metodo",
+      "Attività",
+      "Anno",
+      "Mese previsto",
+      "Data effettiva",
+      "Operatore previsto",
+      "Operatore effettivo",
+      "Matrice",
+      "Tipo di campione",
+      "Esito",
+      "Azioni"
+    ),
+    selection = "none",
+    escape = FALSE,
+    rownames = FALSE,
+    callback = DT::JS(
+      '$(\'div.has-feedback input[type="search"]\').attr( "placeholder", "Tutti" )'
+    ),
+    options = list(
+      processing = FALSE,
+      language = dt_italian,
+      columnDefs = list(list(
+        visible = FALSE, targets = c(0, 9) # exclude id column and sample type
+      ))
+    )
+  )
 }
