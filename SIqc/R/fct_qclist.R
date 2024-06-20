@@ -73,11 +73,12 @@ prepare_tasks_summary <- function(df){
 #' @param df a dataframe with column names metodo, attivita, mese_previsto,
 #' data_effettiva, operatore_previsto, operatore_effettivo, matrice, esito.
 #' @param edit logical. TRUE for editing and FALSE for adding a new record.
+#' @param completed logical. TRUE for completed and FALSE for not completed.
 #' @param conn a DBI::dbConnect valid connection.
 #' @param id id for namespace.
 #' @return a single row dataframe.
 #' @importFrom shiny NS
-modal_dialog <- function(df, edit, conn, id) {
+modal_dialog <- function(df, edit, completed, conn, id) {
   stopifnot(is.data.frame(df))
   stopifnot(
     colnames(df) == c(
@@ -92,6 +93,10 @@ modal_dialog <- function(df, edit, conn, id) {
   stopifnot(is.logical(edit))
   ns <- shiny::NS(id)
 
+  datalabel <- ifelse(completed,
+                      "Visualizza i risultati",
+                      "Aggiungi i risultati")
+
   if (edit) {
     mylabel <- "Salva"
     mymethod <- df$metodo
@@ -100,6 +105,7 @@ modal_dialog <- function(df, edit, conn, id) {
     mymonth <- df$mese_previsto
     myplanned_operator <- df$operatore_previsto
     mysample_type <- df$tipo_campione
+    mydatalabel <- datalabel
 
   } else {
     mylabel <- "Aggiungi"
@@ -109,11 +115,12 @@ modal_dialog <- function(df, edit, conn, id) {
     mymonth <- (Sys.Date() + 31) |> format("%B")
     myplanned_operator <- ""
     mysample_type <- ""
+    mydatalabel <- datalabel
 
   }
 
   shiny::modalDialog(
-    title = "Modifica i valori",
+    title = "Dati di pianificazione",
     div(
       class = "text-center",
       div(
@@ -191,14 +198,14 @@ modal_dialog <- function(df, edit, conn, id) {
       )
     ),
     size = "m",
-    easyClose = TRUE,
+    easyClose = FALSE,
     footer = div(
       class = "d-flex bd-highlight mb-3 container",
       div(
         class = "me-auto bd-highlight",
         shiny::actionButton(
           inputId = ns("add_data"),
-          label = "Aggiungi i risultati",
+          label = mydatalabel,
           icon = shiny::icon("vials")
         )
       ),

@@ -43,18 +43,23 @@ repeatabilityDT <- function(data){
 #' modal dialog for repeatablity
 #'
 #' @description a modal dialog for repeatability calculations and results.
-#' @param conn a DBI::dbConnect object
-#' @param id session information
+#' @param conn a DBI::dbConnect object.
+#' @param id session information.
+#' @param completed logical. TRUE for completed and FALSE for not completed.
 #' @return A dataframe with sample results and repeatability calculations.
 #'
 #' @noRd
 #' @importFrom DT datatable
-repeatability_modal <- function(conn, id) {
+repeatability_modal <- function(conn, id, completed) {
 
   ns <- NS(id)
 
+  datalabel <- ifelse(completed,
+                      "Visualizza i risultati",
+                      "Aggiungi i risultati")
+
   shiny::modalDialog(
-    title = "Aggiungi i risultati",
+    title = datalabel,
     div(
       class = "text-center",
       div(
@@ -114,7 +119,7 @@ repeatability_modal <- function(conn, id) {
       )
     ),
     size = "xl",
-    easyClose = TRUE,
+    easyClose = FALSE,
     footer = div(
       class = "d-flex justify-content-end container",
       div(class = "bd-highlight",
@@ -133,8 +138,7 @@ repeatability_modal <- function(conn, id) {
           )
       )
     )
-  ) |> shiny::showModal()
-
-
+  ) |>
+    shiny::showModal()
 
 }

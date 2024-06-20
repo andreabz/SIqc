@@ -17,8 +17,24 @@ app_server <- function(input, output, session) {
     pool::poolClose(conn)
   })
 
-  r_global <- reactiveValues(conn = conn)
+  r_global <- reactiveValues(conn = conn,
+                             taskid = NA,
+                             activity = NA,
+                             completed = NA,
+                             dbtrigger = NA)
 
   mod_01_plan_server("tasks", r_global)
+
+  observeEvent(r_global$taskid, {
+    req(!is.na(r_global$taskid))
+
+    switch (
+      r_global$activity,
+      "ripetibilità" = mod_011_repeatability_server("rep", r_global),
+      "giustezza" = NA,
+      "proficency test" = NA
+    )
+
+  })
 
 }

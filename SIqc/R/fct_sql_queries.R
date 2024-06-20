@@ -536,16 +536,11 @@ sql_insert <- function(conn, tbl, cols, vals){
   sql_cols <- paste0("(",
                      glue::glue_sql_collapse({`cols`}, sep = ","),
                      ")") |> glue::glue_sql()
-
   sql_vals <- glue::glue_sql("({myvals})")
-
-  print(sql_vals)
-
   sql_query <- glue::glue_sql(.con = conn,
                               "INSERT INTO {`tbl`}
                                {sql_cols}
                                VALUES {sql_vals};")
-  print(sql_query)
 
   DBI::dbExecute(conn, sql_query)
 }
@@ -729,4 +724,52 @@ sql_get_comment_for_task <- function(conn, taskid){
   DBI::dbGetQuery(conn, myquery) |>
     unlist() |>
     unname()
+}
+
+#' SQL query for getting the activity type associated to a task id
+#'
+#' @description retrieve the result associated to a task id.
+#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param taskid the id of the element for which the id is to be retrieved.
+#' @return a character
+#'
+#' @noRd
+#' @importFrom DBI dbGetQuery
+#' @importFrom glue glue_sql
+sql_get_activity_for_task <- function(conn, taskid){
+
+  myquery <- glue::glue_sql("SELECT attivita
+                             FROM pianificazione AS pl
+                             INNER JOIN attivita AS ac
+                             ON pl.attivita_id = ac.attivita_id
+                             WHERE pianificazione_id = {taskid};",
+                            .con = conn)
+
+  DBI::dbGetQuery(conn, myquery) |>
+    unlist() |>
+    unname()
+}
+
+#' SQL query for completed and not completed task
+#'
+#' @description retrieve the result associated to a task id.
+#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param taskid the id of the element for which the id is to be retrieved.
+#' @return a character
+#'
+#' @noRd
+#' @importFrom DBI dbGetQuery
+#' @importFrom glue glue_sql
+sql_is_task_completed <- function(conn, taskid){
+
+  myquery <- glue::glue_sql("SELECT esito_id
+                             FROM giudizio
+                             WHERE pianificazione_id = {taskid};",
+                            .con = conn)
+
+  esito_id <- DBI::dbGetQuery(conn, myquery) |>
+    unlist() |>
+    unname()
+
+  ifelse(length(esito_id) == 0, FALSE, TRUE)
 }

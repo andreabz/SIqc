@@ -49,10 +49,9 @@ mod_01_plan_server <- function(id, r_global){
 
     conn <- isolate(r_global$conn)
 
-    input_df <- reactive({
-      dbtrigger$depend()
-      sql_get_task_summary(conn)
-    })
+    input_df <- eventReactive(r_global$dbtrigger,
+                              sql_get_task_summary(conn)
+                              )
 
     r_local <- shiny::reactiveValues(
       df = NULL,
@@ -60,8 +59,7 @@ mod_01_plan_server <- function(id, r_global){
       dt_row = NULL,
       add_or_edit = NULL,
       edit_button = NULL,
-      keep_track_id = NULL,
-      sample_results = data.table::data.table()
+      keep_track_id = NULL
     )
 
     ##### add the action buttons ----
@@ -90,7 +88,7 @@ mod_01_plan_server <- function(id, r_global){
 
       sql_del_taskid(conn, r_local$dt_row)
       # update data from db
-      dbtrigger$trigger()
+      r_global$dbtrigger <- dbtrigger$trigger()
     })
 
     ##### edit a row ----
@@ -110,7 +108,14 @@ mod_01_plan_server <- function(id, r_global){
                                                    "tipo_campione",
                                                    "operatore_previsto")]
 
-      modal_dialog(r_local$edited_row, edit = TRUE, conn = conn, id = id)
+      # completed or not completed flag
+      r_global$completed <- sql_is_task_completed(conn, r_local$dt_row)
+
+      modal_dialog(r_local$edited_row,
+                   edit = TRUE,
+                   completed = r_global$completed,
+                   conn = conn,
+                   id = id)
       r_local$add_or_edit <- NULL
     })
 
@@ -138,7 +143,7 @@ mod_01_plan_server <- function(id, r_global){
 
       sql_mod_taskid(conn, r_local$edited_row, r_local$dt_row)
       # update data from db
-      dbtrigger$trigger()
+      r_global$dbtrigger <- dbtrigger$trigger()
       shiny::removeModal()
     })
 
@@ -153,7 +158,7 @@ mod_01_plan_server <- function(id, r_global){
         operatore_previsto = NA
       )
 
-      modal_dialog(empty_row, edit = FALSE, conn = conn, id = id)
+      modal_dialog(empty_row, edit = FALSE, completed = FALSE, conn = conn, id = id)
       r_local$add_or_edit <- 1
     })
 
@@ -175,80 +180,16 @@ mod_01_plan_server <- function(id, r_global){
       )
 
       sql_add_task(conn, add_row)
-      dbtrigger$trigger()
+      r_global$dbtrigger <- dbtrigger$trigger()
 
       shiny::removeModal()
     })
 
     ##### add data ----
     shiny::observeEvent(input$add_data, {
-      sample_ids <- sql_get_sampleid_for_task(conn, r_local$dt_row)
-
-      if(sum(!is.na(sample_ids)) == 2){
-        updateSelectInput(session, "sample1", selected = sql_get_name(conn, "campione", sample_ids[1]))
-        updateSelectInput(session, "sample2", selected = sql_get_name(conn, "campione", sample_ids[2]))
-      }
-
-      updateSelectInput(session, "result",
-                        selected = sql_get_result_for_task(conn, taskid = r_local$dt_row))
-      updateSelectInput(session, "comment",
-                        selected = sql_get_comment_for_task(conn, taskid = r_local$dt_row))
-
-      repeatability_modal(conn = conn, id)
-      shiny::removeModal()
-    })
-
-    observeEvent(c(input$sample1, input$sample2), {
-      r_local$sample_results <- sql_get_repeatability(conn,
-                                                      input$sample1,
-                                                      input$sample2,
-                                                      mytask = r_local$dt_row)
-    })
-
-    output$dt_data <- renderUI({
-
-      output$dt_data_tbl <- repeatabilityDT(r_local$sample_results)
-      DT::DTOutput(ns("dt_data_tbl"))
-    })
-
-    # when the table is edited compliance is assessed
-    observeEvent(input$dt_data_tbl_cell_edit, {
-
-      r_local$sample_results <- DT::editData(r_local$sample_results,
-                                             input$dt_data_tbl_cell_edit,
-                                             "dt_data_tbl", rownames = FALSE)
-      r_local$sample_results$esito <- ifelse(r_local$sample_results$differenza <= r_local$sample_results$requisito,
-                                             "conforme",
-                                             "non conforme")
-    })
-
-    ###### close modal ----
-    shiny::observeEvent(input$close_btn, {
-      shiny::removeModal()
-    })
-
-    ###### save modal ----
-    shiny::observeEvent(input$save_res, {
-      shiny::req(!is.null(input$current_id) &
-                   grepl("edit", input$current_id) &
-                   is.null(r_local$add_or_edit))
-
-     sql_mod_repeatability(conn,
-                           sample1 = input$sample1,
-                           sample2 = input$sample2,
-                           mytask = r_local$dt_row,
-                           mydata = r_local$sample_results)
-
-     sql_mod_result(conn,
-                    result = input$result,
-                    comment = input$comment,
-                    mytask = r_local$dt_row)
-
-
-      dbtrigger$trigger()
-      shiny::removeModal()
-    })
-
+      r_global$taskid <- r_local$dt_row
+      r_global$activity <- sql_get_activity_for_task(conn, r_global$taskid)
+     })
 
   })
 }
