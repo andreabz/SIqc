@@ -200,9 +200,9 @@ modal_dialog <- function(df, edit, completed, conn, id) {
     size = "m",
     easyClose = FALSE,
     footer = div(
-      class = "d-flex bd-highlight mb-3 container",
+      class = "d-flex mb-3 container",
       div(
-        class = "me-auto bd-highlight",
+        class = "me-auto",
         shiny::actionButton(
           inputId = ns("add_data"),
           label = mydatalabel,
@@ -210,7 +210,6 @@ modal_dialog <- function(df, edit, completed, conn, id) {
         )
       ),
       div(
-        class = "bd-highlight",
         shiny::actionButton(
           inputId = ns("final_edit"),
           label = mylabel,
@@ -219,7 +218,6 @@ modal_dialog <- function(df, edit, completed, conn, id) {
         )
       ),
       div(
-        class = "bd-highlight",
         shiny::actionButton(
           inputId = ns("dismiss_modal"),
           label = "Chiudi",
@@ -228,6 +226,10 @@ modal_dialog <- function(df, edit, completed, conn, id) {
       )
     )
   ) |> shiny::showModal()
+
+  if(isFALSE(edit)) {
+    shinyjs::hide("add_data")
+  }
 }
 
 #' QC task DT list

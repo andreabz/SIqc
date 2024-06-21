@@ -54,15 +54,14 @@ mod_01_plan_server <- function(id, r_global){
                               )
 
     r_local <- shiny::reactiveValues(
-      df = NULL,
-      edited_row = NULL,
-      dt_row = NULL,
-      add_or_edit = NULL,
-      edit_button = NULL,
-      keep_track_id = NULL
+      df = data.table::data.table(),
+      edited_row = NA,
+      add_or_edit = NA,
+      edit_button = NA,
+      keep_track_id = NA
     )
 
-    ##### add the action buttons ----
+    ##### store the dataset and keep track of the max id value ----
     observeEvent(input_df(), {
       r_local$df <- input_df()
       r_local$keep_track_id <- max(r_local$df$id)
@@ -83,10 +82,10 @@ mod_01_plan_server <- function(id, r_global){
       req(grepl("delete", input$current_id))
 
       # stringi functions are much faster than grepl
-      r_local$dt_row <- r_local$df[which(stringi::stri_detect_regex(r_local$df$azioni,
+      r_global$taskid <- r_local$df[which(stringi::stri_detect_regex(r_local$df$azioni,
                                                          paste0("\\b", input$current_id, "\\b"))), id]
 
-      sql_del_taskid(conn, r_local$dt_row)
+      sql_del_taskid(conn, r_global$taskid)
       # update data from db
       r_global$dbtrigger <- dbtrigger$trigger()
     })
@@ -97,9 +96,9 @@ mod_01_plan_server <- function(id, r_global){
       req(grepl("edit", input$current_id))
 
       # stringi functions are much faster than grepl
-      r_local$dt_row <- r_local$df[which(stringi::stri_detect_regex(r_local$df$azioni,
+      r_global$taskid <- r_local$df[which(stringi::stri_detect_regex(r_local$df$azioni,
                                                                     paste0("\\b", input$current_id, "\\b"))), id]
-      r_local$edited_row <- r_local$df[id == r_local$dt_row,
+      r_local$edited_row <- r_local$df[id == r_global$taskid,
                                        .SD,
                                        .SDcols = c("metodo",
                                                    "attivita",
@@ -108,8 +107,9 @@ mod_01_plan_server <- function(id, r_global){
                                                    "tipo_campione",
                                                    "operatore_previsto")]
 
-      # completed or not completed flag
-      r_global$completed <- sql_is_task_completed(conn, r_local$dt_row)
+      # completed or not completed flag and activity type
+      r_global$completed <- sql_is_task_completed(conn, r_global$taskid)
+      r_global$activity <- sql_get_activity_for_task(conn, r_global$taskid)
 
       modal_dialog(r_local$edited_row,
                    edit = TRUE,
@@ -131,17 +131,17 @@ mod_01_plan_server <- function(id, r_global){
                   is.null(r_local$add_or_edit))
 
       r_local$edited_row <- list(
-        id = r_local$dt_row,
+        id = r_global$taskid,
         metodo = input$method,
         attivita = input$task,
         anno = input$year |> as.integer(),
         mese_previsto = input$month,
         operatore_previsto = input$planned_operator,
         tipo_campione = input$sample_type,
-        azioni = r_local$df[id == r_local$dt_row, azioni]
+        azioni = r_local$df[id == r_global$taskid, azioni]
       )
 
-      sql_mod_taskid(conn, r_local$edited_row, r_local$dt_row)
+      sql_mod_taskid(conn, r_local$edited_row, r_global$taskid)
       # update data from db
       r_global$dbtrigger <- dbtrigger$trigger()
       shiny::removeModal()
@@ -187,8 +187,8 @@ mod_01_plan_server <- function(id, r_global){
 
     ##### add data ----
     shiny::observeEvent(input$add_data, {
-      r_global$taskid <- r_local$dt_row
-      r_global$activity <- sql_get_activity_for_task(conn, r_global$taskid)
+      r_global$edit_results <- isolate(r_global$edit_results + 1)
+      shiny::removeModal()
      })
 
   })

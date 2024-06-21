@@ -120,17 +120,15 @@ repeatability_modal <- function(conn, id, completed) {
     ),
     size = "xl",
     easyClose = FALSE,
-    footer = div(
+    footer = tagList(
+      div(
       class = "d-flex justify-content-end container",
-      div(class = "bd-highlight",
           shiny::actionButton(
             inputId = ns("save_res"),
             label = "Salva",
             icon = shiny::icon("edit"),
             class = "btn-info"
-          )
-      ),
-      div(class = "bd-highlight",
+          ),
           shiny::actionButton(
             inputId = ns("close_btn"),
             label = "Chiudi",

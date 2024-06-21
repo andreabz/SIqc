@@ -21,12 +21,13 @@ app_server <- function(input, output, session) {
                              taskid = NA,
                              activity = NA,
                              completed = NA,
+                             edit_results = 0,
                              dbtrigger = NA)
 
   mod_01_plan_server("tasks", r_global)
 
-  observeEvent(r_global$taskid, {
-    req(!is.na(r_global$taskid))
+  observeEvent(r_global$edit_results, {
+    req(!is.na(r_global$activity))
 
     switch (
       r_global$activity,
