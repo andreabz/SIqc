@@ -7,7 +7,7 @@
 #'
 #' @noRd
 #' @importFrom DT renderDT
-repeatabilityDT <- function(data){
+repeatabilityDT <- function(data) {
   stopifnot(is.data.frame(data))
 
   DT::datatable(
@@ -50,12 +50,9 @@ repeatabilityDT <- function(data){
 #' @noRd
 #' @importFrom DT datatable
 repeatability_modal <- function(conn, id, completed) {
-
   ns <- NS(id)
 
-  datalabel <- ifelse(completed,
-                      "Visualizza i risultati",
-                      "Aggiungi i risultati")
+  datalabel <- ifelse(completed, "Visualizza i risultati", "Aggiungi i risultati")
 
   shiny::modalDialog(
     title = datalabel,
@@ -87,9 +84,7 @@ repeatability_modal <- function(conn, id, completed) {
           width = "200px"
         )
       ),
-      div(
-        DT::DTOutput(outputId = ns("dt_data"))
-      )
+      div(DT::DTOutput(outputId = ns("dt_data")))
     ),
     div(
       class = "d-flex align-content-start justify-content-between",
@@ -121,18 +116,18 @@ repeatability_modal <- function(conn, id, completed) {
     easyClose = FALSE,
     footer = tagList(
       div(
-      class = "d-flex justify-content-end container",
-          shiny::actionButton(
-            inputId = ns("save_res"),
-            label = "Salva",
-            icon = shiny::icon("edit"),
-            class = "btn-info"
-          ),
-          shiny::actionButton(
-            inputId = ns("close_btn"),
-            label = "Chiudi",
-            class = "btn-danger"
-          )
+        class = "d-flex justify-content-end container",
+        shiny::actionButton(
+          inputId = ns("save_res"),
+          label = "Salva",
+          icon = shiny::icon("edit"),
+          class = "btn-info"
+        ),
+        shiny::actionButton(
+          inputId = ns("close_btn"),
+          label = "Chiudi",
+          class = "btn-danger"
+        )
       )
     )
   ) |>

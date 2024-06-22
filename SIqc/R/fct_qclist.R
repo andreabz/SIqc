@@ -29,7 +29,6 @@ table_btns <- function(x) {
 #' @noRd
 #' @import data.table
 add_btns <- function(df) {
-
   dt <- data.table::data.table(df)
   dt[, actions := table_btns(id)]
 }
@@ -43,11 +42,21 @@ add_btns <- function(df) {
 #'
 #' @return a dataframe with the right class for each column.
 #' @import data.table
-prepare_tasks_summary <- function(df){
+prepare_tasks_summary <- function(df) {
   stopifnot(is.data.frame(df))
-  stopifnot(colnames(df) == c("metodo", "attivita", "anno", "mese_previsto",
-                              "data_effettiva", "operatore_previsto",
-                              "operatore_effettivo", "matrice", "esito"))
+  stopifnot(
+    colnames(df) == c(
+      "metodo",
+      "attivita",
+      "anno",
+      "mese_previsto",
+      "data_effettiva",
+      "operatore_previsto",
+      "operatore_effettivo",
+      "matrice",
+      "esito"
+    )
+  )
 
   month_lvl <- c("non previsto", format(ISOdate(2000, 1:12, 1), "%B"))
 
@@ -58,11 +67,10 @@ prepare_tasks_summary <- function(df){
   data$mese_previsto <- as.factor(data$mese_previsto)
   data$data_effettiva <- as.Date(data$data_effettiva)
   data$matrice <- as.factor(data$matrice)
-  data$esito <- ifelse(is.na(data$esito),
-                       yes = "incompleto",
-                       no = ifelse(data$esito == 1,
-                                   yes = "conforme",
-                                   no = "non conforme")
+  data$esito <- ifelse(
+    is.na(data$esito),
+    yes = "incompleto",
+    no = ifelse(data$esito == 1, yes = "conforme", no = "non conforme")
   ) |> as.factor()
   data
 }
@@ -93,9 +101,7 @@ modal_dialog <- function(df, edit, completed, conn, id) {
   stopifnot(is.logical(edit))
   ns <- shiny::NS(id)
 
-  datalabel <- ifelse(completed,
-                      "Visualizza i risultati",
-                      "Aggiungi i risultati")
+  datalabel <- ifelse(completed, "Visualizza i risultati", "Aggiungi i risultati")
 
   if (edit) {
     mylabel <- "Salva"
@@ -227,7 +233,7 @@ modal_dialog <- function(df, edit, completed, conn, id) {
     )
   ) |> shiny::showModal()
 
-  if(isFALSE(edit)) {
+  if (isFALSE(edit)) {
     shinyjs::hide("add_data")
   }
 }
