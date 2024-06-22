@@ -260,14 +260,16 @@ sql_get_sampleid_for_task <- function(conn, task_id){
 #'
 #' @description remove a row given its id into the plan table into the DB.
 #' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param table the name of the table from which the row should be removed.
+#' @param column the name of the column with the id information.
 #' @param id the id of the task.
 #' @return an SQL expression.
 #'
 #' @noRd
 #' @importFrom DBI dbExecute
 #' @importFrom glue glue_sql
-sql_del_taskid <- function(conn, task_id){
-  myquery <- glue::glue_sql("DELETE FROM pianificazione WHERE pianificazione_id = {task_id};",
+sql_del_taskid <- function(conn, table, column, task_id){
+  myquery <- glue::glue_sql("DELETE FROM {`table`} WHERE {`column`} = {task_id};",
                             .con = conn)
 
   DBI::dbExecute(conn, myquery)
