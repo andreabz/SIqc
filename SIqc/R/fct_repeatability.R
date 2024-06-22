@@ -9,9 +9,8 @@
 #' @importFrom DT renderDT
 repeatabilityDT <- function(data){
   stopifnot(is.data.frame(data))
-  stopifnot(dim(data)[2] == 8)
 
-  DT::renderDT(
+  DT::datatable(
     data,
     filter = "none",
     selection = "none",
@@ -89,7 +88,7 @@ repeatability_modal <- function(conn, id, completed) {
         )
       ),
       div(
-        uiOutput(outputId = ns("dt_data"))
+        DT::DTOutput(outputId = ns("dt_data"))
       )
     ),
     div(

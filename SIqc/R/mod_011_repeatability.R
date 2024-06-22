@@ -7,7 +7,42 @@ mod_011_repeatability_server <- function(id, r_global) {
     conn <- isolate(r_global$conn)
     dbtrigger <- makereactivetrigger()
 
-    r_local <- reactiveValues(sample_results = data.table::data.table())
+    r_local <- reactiveValues(sample_results = data.table::data.table(),
+                              sample_ids = NA,
+                              sample_name1 = NA,
+                              sample_name2 = NA,
+                              task_result = NA,
+                              task_comment = NA)
+
+    shiny::observeEvent(r_global$taskid, {
+
+      r_local$sample_ids <- sql_get_sampleid_for_task(conn, r_global$taskid)
+      r_local$sample_name1 <- sql_get_name(conn, "campione", r_local$sample_ids[1])
+      r_local$sample_name2 <- sql_get_name(conn, "campione", r_local$sample_ids[2])
+      r_local$task_result <- sql_get_result_for_task(conn, taskid = r_global$taskid)
+      r_local$task_comment <- sql_get_comment_for_task(conn, taskid = r_global$taskid)
+
+      # update the inputs only when sample information has been saved
+      if(length(r_local$sample_ids) == 2){
+        freezeReactiveValue(input, "sample1")
+        updateSelectInput(session, "sample1", selected = r_local$sample_name1)
+        freezeReactiveValue(input, "sample2")
+        updateSelectInput(session, "sample2", selected = r_local$sample_name2)
+      }
+
+      freezeReactiveValue(input, "result")
+      updateSelectInput(session, "result", selected = r_local$task_result)
+      freezeReactiveValue(input, "comment")
+      updateSelectInput(session, "comment", selected = r_local$task_comment)
+
+    })
+
+    shiny::observeEvent(r_global$edit_results, {
+      req(r_global$activity == "ripetibilità")
+
+      repeatability_modal(conn = conn, id, completed = r_global$completed)
+      shinyjs::hide("save_res")
+    })
 
     shiny::observeEvent(c(input$sample1, input$sample2), {
 
@@ -17,48 +52,15 @@ mod_011_repeatability_server <- function(id, r_global) {
                                                       mytask = r_global$taskid)
     })
 
-    output$dt_data <- renderUI({
-      repeatabilityDT(r_local$sample_results)
-    })
-
-    shiny::observeEvent(r_global$edit_results, {
-      req(r_global$activity == "ripetibilità")
-      input$sample1 # very important to avoid a bug, but I don't know why.
-      # To replicate the bug:
-      # 1. click edit on a task;
-      # 2. click on add data on the first modal dialog;
-      # 3. click close on the second modal dialog;
-      # 4. repeat 1 to 2. and you'll see to overlaied modal dialog.
-
-      sample_ids <- sql_get_sampleid_for_task(conn, r_global$taskid)
-      sample_name1 <- sql_get_name(conn, "campione", sample_ids[1])
-      sample_name2 <- sql_get_name(conn, "campione", sample_ids[2])
-      task_result <- sql_get_result_for_task(conn, taskid = r_global$taskid)
-      task_comment <- sql_get_comment_for_task(conn, taskid = r_global$taskid)
-
-      # update the inputs only when sample information has been saved
-      if(length(sample_ids) == 2){
-      freezeReactiveValue(input, "sample1")
-      updateSelectInput(session, "sample1", selected = sample_name1)
-      freezeReactiveValue(input, "sample2")
-      updateSelectInput(session, "sample2", selected = sample_name2)
-      }
-
-      freezeReactiveValue(input, "result")
-      updateSelectInput(session, "result", selected = task_result)
-      freezeReactiveValue(input, "comment")
-      updateSelectInput(session, "comment", selected = task_comment)
-
-      repeatability_modal(conn = conn, id, completed = r_global$completed)
-      shinyjs::hide("save_res")
-    })
+    result_tbl <- reactive({repeatabilityDT(r_local$sample_results)})
+    output$dt_data <- DT::renderDT(result_tbl())
 
       # when the table is edited compliance is assessed
-      observeEvent(input$dt_data_tbl_cell_edit, {
+      observeEvent(input$dt_data_cell_edit, {
         r_local$sample_results <- DT::editData(
           r_local$sample_results,
-          input$dt_data_tbl_cell_edit,
-          "dt_data_tbl",
+          input$dt_data_cell_edit,
+          "dt_data",
           rownames = FALSE
         )
         r_local$sample_results$esito <- ifelse(
@@ -75,7 +77,7 @@ mod_011_repeatability_server <- function(id, r_global) {
       })
 
       # enable save button only when limit and final result are reported
-      observeEvent(c(input$dt_data_tbl_cell_edit,
+      observeEvent(c(input$dt_data_cell_edit,
                      input$result,
                      input$comment), {
 
