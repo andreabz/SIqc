@@ -19,7 +19,7 @@ mod_01_plan_ui <- function(id) {
         style = "margin-top: 20px;",
         bslib::input_task_button(
           id = ns("add_task"),
-          label = "Aggiungi attività",
+          label = "Pianifica un'attività",
           icon = shiny::icon("plus")
         )
       )
@@ -61,7 +61,7 @@ mod_01_plan_server <- function(id, r_global) {
 
     ##### store the dataset and keep track of the max id value ----
     observeEvent(input_df(), {
-      r_local$df <- input_df()
+      r_local$df <- input_df() |> prepare_tasks_summary()
       r_local$keep_track_id <- max(r_local$df$id)
     })
 

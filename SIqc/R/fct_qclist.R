@@ -46,6 +46,7 @@ prepare_tasks_summary <- function(df) {
   stopifnot(is.data.frame(df))
   stopifnot(
     colnames(df) == c(
+      "id",
       "metodo",
       "attivita",
       "anno",
@@ -54,7 +55,9 @@ prepare_tasks_summary <- function(df) {
       "operatore_previsto",
       "operatore_effettivo",
       "matrice",
-      "esito"
+      "tipo_campione",
+      "esito",
+      "azioni"
     )
   )
 
@@ -64,14 +67,10 @@ prepare_tasks_summary <- function(df) {
   data$metodo <- as.factor(data$metodo)
   data$attivita <- as.factor(data$attivita)
   data$anno <- as.factor(data$anno)
-  data$mese_previsto <- as.factor(data$mese_previsto)
+  data$mese_previsto <- factor(data$mese_previsto, levels = month_lvl)
   data$data_effettiva <- as.Date(data$data_effettiva)
   data$matrice <- as.factor(data$matrice)
-  data$esito <- ifelse(
-    is.na(data$esito),
-    yes = "incompleto",
-    no = ifelse(data$esito == 1, yes = "conforme", no = "non conforme")
-  ) |> as.factor()
+  data$esito <- as.factor(data$esito)
   data
 }
 
@@ -82,7 +81,7 @@ prepare_tasks_summary <- function(df) {
 #' data_effettiva, operatore_previsto, operatore_effettivo, matrice, esito.
 #' @param edit logical. TRUE for editing and FALSE for adding a new record.
 #' @param completed logical. TRUE for completed and FALSE for not completed.
-#' @param conn a DBI::dbConnect valid connection.
+#' @param conn a pool::dbConnect valid connection.
 #' @param id id for namespace.
 #' @return a single row dataframe.
 #' @importFrom shiny NS
