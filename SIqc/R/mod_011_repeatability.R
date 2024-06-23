@@ -16,15 +16,17 @@ mod_011_repeatability_server <- function(id, r_global) {
       task_comment = NA
     )
 
-    shiny::observeEvent(r_global$edit_results, {
-      req(r_global$activity == "ripetibilità")
-
+    shiny::observeEvent(r_global$taskid, {
       # get and stores input values
       r_local$sample_ids <- sql_get_sampleid_for_task(conn, r_global$taskid)
       r_local$sample_name1 <- sql_get_name(conn, "campione", r_local$sample_ids[1])
       r_local$sample_name2 <- sql_get_name(conn, "campione", r_local$sample_ids[2])
       r_local$task_result <- sql_get_result_for_task(conn, taskid = r_global$taskid)
       r_local$task_comment <- sql_get_comment_for_task(conn, taskid = r_global$taskid)
+    })
+
+    shiny::observeEvent(r_global$edit_results, {
+      req(r_global$activity == "ripetibilità")
 
       # update the inputs only when sample information has been saved
       if (length(r_local$sample_ids) == 2) {
