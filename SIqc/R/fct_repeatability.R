@@ -42,7 +42,7 @@ repeatabilityDT <- function(data) {
 #' modal dialog for repeatablity
 #'
 #' @description a modal dialog for repeatability calculations and results.
-#' @param conn a DBI::dbConnect object.
+#' @param conn a pool::dbConnect object.
 #' @param id session information.
 #' @param completed logical. TRUE for completed and FALSE for not completed.
 #' @return A dataframe with sample results and repeatability calculations.

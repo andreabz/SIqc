@@ -1,7 +1,7 @@
 #' SQL query for planned tasks
 #'
 #' @description get a summary of the planned tasks
-#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param conn a connection to a database obtained by pool::dbConnect.
 #'
 #' @return a SQL query performing on a established db connection.
 #'
@@ -9,7 +9,7 @@
 #' @importFrom DBI dbGetQuery
 #' @import data.table
 sql_get_task_summary <- function(conn){
-  DBI::dbGetQuery(conn, "SELECT
+  pool::dbGetQuery(conn, "SELECT
                         pz.pianificazione_id AS id,
                         metodo,
                         attivita,
@@ -56,7 +56,7 @@ sql_get_task_summary <- function(conn){
 #' SQL query for unnamed lists
 #'
 #' @description get a list of elements.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param conn a connection to a database obtained by pool::dbConnect.
 #' @param name name of the table and element of the table to be retrieved:
 #' they must be the same and provided as single character value.
 #'
@@ -67,7 +67,7 @@ sql_get_task_summary <- function(conn){
 #' @importFrom glue glue_sql
 sql_get_list <- function(conn, name){
   query <- glue::glue_sql("SELECT {`name`} FROM {`name`};", .con = conn)
-  DBI::dbGetQuery(conn, query)|>
+  pool::dbGetQuery(conn, query)|>
     unlist() |>
     unname()
 }
@@ -75,7 +75,7 @@ sql_get_list <- function(conn, name){
 #' SQL query for repeatability sample results
 #'
 #' @description get a data.frame of sample results for reapeatability.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param conn a connection to a database obtained by pool::dbConnect.
 #' @param sample1 a character string with the name of the sample.
 #' @param sample2 a character string with the name of the sample.
 #' @param mytask id of the task to be evaluated.
@@ -124,7 +124,7 @@ sql_get_repeatability <- function(conn, sample1, sample2, mytask){
                   AND rip.pianificazione_id = {mytask};",
                           .con = conn)
 
-  results <- DBI::dbGetQuery(conn, query) |>
+  results <- pool::dbGetQuery(conn, query) |>
     data.table::data.table()
 
   # When no results were stored for that samples pair,
@@ -149,17 +149,17 @@ sql_get_repeatability <- function(conn, sample1, sample2, mytask){
                               res1.campione_id = {sample1_id} AND res2.campione_id = {sample2_id};",
                             .con = conn)
 
-     maxid <- DBI::dbGetQuery(conn, "SELECT
+     maxid <- pool::dbGetQuery(conn, "SELECT
                                       MAX(ripetibilita_id) as ripetibilita_id
                                     FROM ripetibilita") |>
        unlist() |>
        unname()
 
-    res_query <- DBI::dbGetQuery(conn, query) |>
+    res_query <- pool::dbGetQuery(conn, query) |>
       data.table::data.table()
 
     # adding index
-    ids <- DBI::dbGetQuery(conn,
+    ids <- pool::dbGetQuery(conn,
       glue::glue_sql("SELECT
                         ripetibilita_id
                         FROM ripetibilita
@@ -193,7 +193,7 @@ sql_get_repeatability <- function(conn, sample1, sample2, mytask){
 #' SQL query for getting an id given an element and table name
 #'
 #' @description retrieve the id associated to a sample name.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param conn a connection to a database obtained by pool::dbConnect.
 #' @param table the name of the SQL table from which the element id should be retrieved.
 #' @param element the name of the element for which the id is to be retrieved.
 #' @return an integer
@@ -207,7 +207,7 @@ sql_get_id <- function(conn, table, element){
   myquery <- glue::glue_sql("SELECT {`colid`} FROM campione WHERE {`table`} = {element};",
                             .con = conn)
 
-  DBI::dbGetQuery(conn, myquery) |>
+  pool::dbGetQuery(conn, myquery) |>
     unlist() |>
     unname()
 }
@@ -215,7 +215,7 @@ sql_get_id <- function(conn, table, element){
 #' SQL query for getting an element name given a table name and element id
 #'
 #' @description retrieve the name of a sample associate to an id.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param conn a connection to a database obtained by pool::dbConnect.
 #' @param table the name of the SQL table from which the element name should be retrieved.
 #' @param elementid the id of the element for which the id is to be retrieved.
 #' @return a character
@@ -229,7 +229,7 @@ sql_get_name <- function(conn, table, elementid){
   myquery <- glue::glue_sql("SELECT {`table`} FROM {`table`} WHERE {`idname`} = {elementid};",
                             .con = conn)
 
-  DBI::dbGetQuery(conn, myquery) |>
+  pool::dbGetQuery(conn, myquery) |>
     unlist() |>
     unname()
 }
@@ -237,7 +237,7 @@ sql_get_name <- function(conn, table, elementid){
 #' SQL query for getting the sample ids associated to a given task
 #'
 #' @description retrieve the sample id associate to a task.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param conn a connection to a database obtained by pool::dbConnect.
 #' @param task the id of the task.
 #' @return an integer vector
 #'
@@ -251,7 +251,7 @@ sql_get_sampleid_for_task <- function(conn, task_id){
                               WHERE pianificazione_id = {task_id};",
                             .con = conn)
 
-  DBI::dbGetQuery(conn, myquery) |>
+  pool::dbGetQuery(conn, myquery) |>
     unlist() |>
     unname()
 }
@@ -259,7 +259,7 @@ sql_get_sampleid_for_task <- function(conn, task_id){
 #' SQL query for removing a row given its id.
 #'
 #' @description remove a row given its id into the plan table into the DB.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param conn a connection to a database obtained by pool::dbConnect.
 #' @param table the name of the table from which the row should be removed.
 #' @param column the name of the column with the id information.
 #' @param id the id of the task.
@@ -272,13 +272,13 @@ sql_del_taskid <- function(conn, table, column, task_id){
   myquery <- glue::glue_sql("DELETE FROM {`table`} WHERE {`column`} = {task_id};",
                             .con = conn)
 
-  DBI::dbExecute(conn, myquery)
+  pool::dbExecute(conn, myquery)
 }
 
 #' SQL query for modifying a row given its id.
 #'
 #' @description modify a row given its id into the plan table into the DB.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param conn a connection to a database obtained by pool::dbConnect.
 #' @param newvalue a data.frame with the new values.
 #' @param id the id of the task.
 #' @return an SQL expression.
@@ -290,15 +290,15 @@ sql_mod_taskid <- function(conn, newvalue, task_id){
 
   opprevisto_value <- newvalue$operatore_previsto
 
-  method_value <- DBI::dbGetQuery(conn, "SELECT metodo_id FROM metodo WHERE metodo = ?",
+  method_value <- pool::dbGetQuery(conn, "SELECT metodo_id FROM metodo WHERE metodo = ?",
                                   params = newvalue$metodo)
-  task_value <- DBI::dbGetQuery(conn, "SELECT attivita_id FROM attivita WHERE attivita = ?",
+  task_value <- pool::dbGetQuery(conn, "SELECT attivita_id FROM attivita WHERE attivita = ?",
                                 params = newvalue$attivita)
-  year_value <- DBI::dbGetQuery(conn, "SELECT anno_id FROM anno WHERE anno = ?",
+  year_value <- pool::dbGetQuery(conn, "SELECT anno_id FROM anno WHERE anno = ?",
                                 params = newvalue$anno)
-  month_value <- DBI::dbGetQuery(conn, "SELECT mese_id FROM mese WHERE mese = ?",
+  month_value <- pool::dbGetQuery(conn, "SELECT mese_id FROM mese WHERE mese = ?",
                                  params = newvalue$mese_previsto)
-  type_value <- DBI::dbGetQuery(conn, "SELECT tipo_campione_id FROM tipo_campione WHERE tipo_campione = ?",
+  type_value <- pool::dbGetQuery(conn, "SELECT tipo_campione_id FROM tipo_campione WHERE tipo_campione = ?",
                                   params = newvalue$tipo_campione)
 
   myquery <- glue::glue_sql("UPDATE pianificazione
@@ -311,13 +311,13 @@ sql_mod_taskid <- function(conn, newvalue, task_id){
                              WHERE pianificazione_id = {task_id};",
                             .con = conn)
 
-  DBI::dbExecute(conn, myquery)
+  pool::dbExecute(conn, myquery)
 }
 
 #' SQL query for adding a new row.
 #'
 #' @description modify a row given its id into the plan table into the DB.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param conn a connection to a database obtained by pool::dbConnect.
 #' @param newvalue a data.frame with the new values.
 #' @return an SQL expression.
 #'
@@ -328,17 +328,17 @@ sql_add_task <- function(conn, newvalue){
 
   opprevisto_value <- newvalue$operatore_previsto
 
-  method_value <- DBI::dbGetQuery(conn, "SELECT metodo_id FROM metodo WHERE metodo = ?",
+  method_value <- pool::dbGetQuery(conn, "SELECT metodo_id FROM metodo WHERE metodo = ?",
                                   params = newvalue$metodo)
-  task_value <- DBI::dbGetQuery(conn, "SELECT attivita_id FROM attivita WHERE attivita = ?",
+  task_value <- pool::dbGetQuery(conn, "SELECT attivita_id FROM attivita WHERE attivita = ?",
                                 params = newvalue$attivita)
-  year_value <- DBI::dbGetQuery(conn, "SELECT anno_id FROM anno WHERE anno = ?",
+  year_value <- pool::dbGetQuery(conn, "SELECT anno_id FROM anno WHERE anno = ?",
                                 params = newvalue$anno)
-  month_value <- DBI::dbGetQuery(conn, "SELECT mese_id FROM mese WHERE mese = ?",
+  month_value <- pool::dbGetQuery(conn, "SELECT mese_id FROM mese WHERE mese = ?",
                                  params = newvalue$mese_previsto)
-  sampletype_value <- DBI::dbGetQuery(conn, "SELECT tipo_campione_id FROM tipo_campione WHERE tipo_campione = ?",
+  sampletype_value <- pool::dbGetQuery(conn, "SELECT tipo_campione_id FROM tipo_campione WHERE tipo_campione = ?",
                                   params = newvalue$tipo_campione)
-  max_id <- DBI::dbGetQuery(conn, "SELECT MAX(pianificazione_id) AS id FROM pianificazione") + 1
+  max_id <- pool::dbGetQuery(conn, "SELECT MAX(pianificazione_id) AS id FROM pianificazione") + 1
   actions <- table_btns(max_id)
 
   myquery <- glue::glue_sql("INSERT INTO pianificazione (
@@ -352,13 +352,13 @@ sql_add_task <- function(conn, newvalue){
                                      {opprevisto_value}, {actions});",
                             .con = conn)
 
-  DBI::dbExecute(conn, myquery)
+  pool::dbExecute(conn, myquery)
 }
 
 #' SQL query for modifying repeatability sample results
 #'
 #' @description get a data.frame of sample results for reapeatability.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param conn a connection to a database obtained by pool::dbConnect.
 #' @param sample1 a character string with the name of the sample.
 #' @param sample2 a character string with the name of the sample.
 #' @param mytask id of the task to be evaluated.
@@ -388,10 +388,10 @@ sql_mod_repeatability <- function(conn,
                         differenza, requisito, differenza_su_requisito)]
 
   # write the new data to a tmp SQL table
-  DBI::dbWriteTable(conn, "ripetibilita_tmp", newdata, append = TRUE)
+  pool::dbWriteTable(conn, "ripetibilita_tmp", newdata, append = TRUE)
 
   # normalise the new data
-  res <- DBI::dbGetQuery(conn, "SELECT
+  res <- pool::dbGetQuery(conn, "SELECT
                           tmp.ripetibilita_id,
                           cmp1.campione_id AS campione1_id,
                           cmp2.campione_id AS campione2_id,
@@ -412,10 +412,10 @@ sql_mod_repeatability <- function(conn,
                           ON tmp.esito = ex.esito")
 
   # remove the tmp SQL table
-  DBI::dbExecute(conn, "DELETE FROM ripetibilita_tmp")
+  pool::dbExecute(conn, "DELETE FROM ripetibilita_tmp")
 
   # get the max id for the results table
-  maxid <- DBI::dbGetQuery(conn, "SELECT MAX(ripetibilita_id) FROM ripetibilita") |>
+  maxid <- pool::dbGetQuery(conn, "SELECT MAX(ripetibilita_id) FROM ripetibilita") |>
     unlist() |>
     unname()
 
@@ -424,7 +424,7 @@ sql_mod_repeatability <- function(conn,
 
     # adding the new results
     tblname <- "ripetibilita"
-    mycols <- DBI::dbListFields(conn, tblname)
+    mycols <- pool::dbListFields(conn, tblname)
 
     lapply(seq_len(nrow(res)), function(x) {
       myvals <- res[x, ]
@@ -459,7 +459,7 @@ sql_mod_repeatability <- function(conn,
   } else {
 
     tblname <- "ripetibilita"
-    mycols <- DBI::dbListFields(conn, tblname)[-1]
+    mycols <- pool::dbListFields(conn, tblname)[-1]
 
     lapply(seq_len(nrow(res)), function(x){
       myvals <- res[x, ]
@@ -483,7 +483,7 @@ sql_mod_repeatability <- function(conn,
     mycols <- c("pianificazione_id", "campione_id")
     vals <- data.frame(pianificazione_id = rep(mytask, 2),
                        campione_id = sample_id)
-    pianificazione_campione_id <- DBI::dbGetQuery(conn, "SELECT pianificazione_campione_id
+    pianificazione_campione_id <- pool::dbGetQuery(conn, "SELECT pianificazione_campione_id
                                                   FROM pianificazione_campione
                                                   WHERE pianificazione_id = ?;",
                                                   params = mytask) |>
@@ -544,7 +544,7 @@ sql_insert <- function(conn, tbl, cols, vals){
                                {sql_cols}
                                VALUES {sql_vals};")
 
-  DBI::dbExecute(conn, sql_query)
+  pool::dbExecute(conn, sql_query)
 }
 
 #' SQL code for updating the data
@@ -583,13 +583,13 @@ sql_update <- function(conn, tbl, cols, vals, condcol, condval){
                                SET {sql_cols}
                                WHERE {`condcol`} = {condval};")
 
-  DBI::dbExecute(conn, sql_query)
+  pool::dbExecute(conn, sql_query)
 }
 
 #' SQL query for modifying task activity result
 #'
 #' @description get a data.frame of sample results for reapeatability.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param conn a connection to a database obtained by pool::dbConnect.
 #' @param result a character string with the result of the task.
 #' @param comment a character string with the comment of the task.
 #' @param mytask id of the task to be evaluated.
@@ -605,10 +605,10 @@ sql_mod_result <- function(conn,
                            comment,
                            mytask){
 
-  id <- DBI::dbGetQuery(conn,
+  id <- pool::dbGetQuery(conn,
                         "SELECT giudizio_id FROM giudizio WHERE pianificazione_id = ?",
                         params = mytask)
-  maxid <- DBI::dbGetQuery(conn,
+  maxid <- pool::dbGetQuery(conn,
                            "SELECT MAX(giudizio_id) FROM giudizio")
 
   if(nrow(id) == 0) {
@@ -623,10 +623,10 @@ sql_mod_result <- function(conn,
                         commento = comment)
 
   # write the new data to a tmp SQL table
-  DBI::dbWriteTable(conn, "giudizio_tmp", newdata, append = TRUE)
+  pool::dbWriteTable(conn, "giudizio_tmp", newdata, append = TRUE)
 
   # normalise the new data
-  res <- DBI::dbGetQuery(conn,
+  res <- pool::dbGetQuery(conn,
                         "SELECT
                           tmp.giudizio_id,
                           tmp.pianificazione_id,
@@ -637,14 +637,14 @@ sql_mod_result <- function(conn,
                           ON tmp.esito = ex.esito")
 
   # remove the tmp SQL table
-  DBI::dbExecute(conn, "DELETE FROM giudizio_tmp")
+  pool::dbExecute(conn, "DELETE FROM giudizio_tmp")
 
     # for new data to be added to the results table
   if(id > maxid){
 
     # adding the new results
     tblname <- "giudizio"
-    mycols <- DBI::dbListFields(conn, tblname)
+    mycols <- pool::dbListFields(conn, tblname)
 
     lapply(seq_len(nrow(res)), function(x) {
       myvals <- res[x, ]
@@ -661,7 +661,7 @@ sql_mod_result <- function(conn,
   } else {
 
     tblname <- "giudizio"
-    mycols <- DBI::dbListFields(conn, tblname)[-1]
+    mycols <- pool::dbListFields(conn, tblname)[-1]
 
     lapply(seq_len(nrow(res)), function(x){
       myvals <- res[x, ]
@@ -685,7 +685,7 @@ sql_mod_result <- function(conn,
 #' SQL query for getting the result associated to a task id
 #'
 #' @description retrieve the result associated to a task id.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param conn a connection to a database obtained by pool::dbConnect.
 #' @param taskid the id of the element for which the id is to be retrieved.
 #' @return a character
 #'
@@ -701,7 +701,7 @@ sql_get_result_for_task <- function(conn, taskid){
                              WHERE pianificazione_id = {taskid};",
                             .con = conn)
 
-  DBI::dbGetQuery(conn, myquery) |>
+  pool::dbGetQuery(conn, myquery) |>
     unlist() |>
     unname()
 }
@@ -709,7 +709,7 @@ sql_get_result_for_task <- function(conn, taskid){
 #' SQL query for getting the comment associated to a task id
 #'
 #' @description retrieve the result associated to a task id.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param conn a connection to a database obtained by pool::dbConnect.
 #' @param taskid the id of the element for which the id is to be retrieved.
 #' @return a character
 #'
@@ -723,7 +723,7 @@ sql_get_comment_for_task <- function(conn, taskid){
                              WHERE pianificazione_id = {taskid};",
                             .con = conn)
 
-  DBI::dbGetQuery(conn, myquery) |>
+  pool::dbGetQuery(conn, myquery) |>
     unlist() |>
     unname()
 }
@@ -731,7 +731,7 @@ sql_get_comment_for_task <- function(conn, taskid){
 #' SQL query for getting the activity type associated to a task id
 #'
 #' @description retrieve the result associated to a task id.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param conn a connection to a database obtained by pool::dbConnect.
 #' @param taskid the id of the element for which the id is to be retrieved.
 #' @return a character
 #'
@@ -747,7 +747,7 @@ sql_get_activity_for_task <- function(conn, taskid){
                              WHERE pianificazione_id = {taskid};",
                             .con = conn)
 
-  DBI::dbGetQuery(conn, myquery) |>
+  pool::dbGetQuery(conn, myquery) |>
     unlist() |>
     unname()
 }
@@ -755,7 +755,7 @@ sql_get_activity_for_task <- function(conn, taskid){
 #' SQL query for completed and not completed task
 #'
 #' @description retrieve the result associated to a task id.
-#' @param conn a connection to a database obtained by DBI::dbConnect.
+#' @param conn a connection to a database obtained by pool::dbConnect.
 #' @param taskid the id of the element for which the id is to be retrieved.
 #' @return a character
 #'
@@ -769,7 +769,7 @@ sql_is_task_completed <- function(conn, taskid){
                              WHERE pianificazione_id = {taskid};",
                             .con = conn)
 
-  esito_id <- DBI::dbGetQuery(conn, myquery) |>
+  esito_id <- pool::dbGetQuery(conn, myquery) |>
     unlist() |>
     unname()
 
