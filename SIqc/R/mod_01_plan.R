@@ -91,6 +91,7 @@ mod_01_plan_server <- function(id, r_global) {
       sql_del_taskid(conn, "pianificazione", "pianificazione_id", r_global$taskid)
       sql_del_taskid(conn, "pianificazione_campione", "pianificazione_id", r_global$taskid)
       sql_del_taskid(conn, "ripetibilita", "pianificazione_id", r_global$taskid)
+      sql_del_taskid(conn, "giudizio", "pianificazione_id", r_global$taskid)
       # update data from db
       r_global$dbtrigger <- dbtrigger$trigger()
     })
