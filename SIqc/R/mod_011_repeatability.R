@@ -5,7 +5,6 @@ mod_011_repeatability_server <- function(id, r_global) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
     conn <- isolate(r_global$conn)
-    dbtrigger <- makereactivetrigger()
 
     r_local <- reactiveValues(
       sample_results = data.table::data.table(),
@@ -17,6 +16,8 @@ mod_011_repeatability_server <- function(id, r_global) {
     )
 
     shiny::observeEvent(r_global$taskid, {
+      req(!is.na(r_global$taskid))
+
       # get and stores input values
       r_local$sample_ids <- sql_get_sampleid_for_task(conn, r_global$taskid)
       r_local$sample_name1 <- sql_get_name(conn, "campione", r_local$sample_ids[1])
@@ -106,7 +107,10 @@ mod_011_repeatability_server <- function(id, r_global) {
         mytask = r_global$taskid
       )
 
-      r_global$dbtrigger <- dbtrigger$trigger()
+      r_global$dbtrigger <- r_global$dbtrigger + 1
+      # temporarily reset the taskid flag to let update the sample inputs also
+      # when accessing a just added task
+      r_global$taskid <- NA
       shiny::removeModal()
     })
 
