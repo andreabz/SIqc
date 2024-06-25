@@ -848,3 +848,94 @@ sql_get_acoperator_for_task <- function(conn, taskid){
     unlist() |>
     unname()
 }
+
+#' SQL query for getting repeatability results for a given method and parameter
+#'
+#' @description retrieve the repeatability data associated to a method and parameter.
+#' @param conn a connection to a database obtained by pool::dbConnect.
+#' @param methodid the id of a method.
+#' @param paramid the id of a parameter.
+#' @return a data.table
+#'
+#' @noRd
+#' @importFrom DBI dbGetQuery
+#' @importFrom glue glue_sql
+#' @import data.table
+sql_get_repeatability_for_method_parameter <- function(conn, methodid, paramid){
+  stopifnot(is.integer(methodid))
+  stopifnot(is.integer(paramid))
+
+  myquery <- glue::glue_sql(
+              "SELECT
+                rip.ripetibilita_id AS ripetibilita_id,
+                par.parametro_id,
+                met.metodo_id,
+                met.metodo,
+                cm1.campione AS campione1,
+                cm2.campione AS campione2,
+                res1.operatore_effettivo,
+                par.parametro,
+                udm.unita_misura,
+                res1.valore AS valore1,
+                res2.valore AS valore2,
+                differenza,
+                requisito, differenza_su_requisito,
+                esito
+               FROM ripetibilita AS rip
+               INNER JOIN esito AS ex
+                ON rip.esito_id = ex.esito_id
+               INNER JOIN parametro AS par
+                ON rip.parametro_id = par.parametro_id
+               INNER JOIN risultato AS res1
+                ON res1.campione_id = rip.campione1_id
+                AND res1.parametro_id = rip.parametro_id
+               INNER JOIN risultato AS res2
+                ON res2.campione_id = rip.campione2_id
+                AND res2.parametro_id = rip.parametro_id
+               INNER JOIN unita_misura AS udm
+                ON res1.unita_misura_id = udm.unita_misura_id
+              INNER JOIN campione AS cm1
+                ON res1.campione_id = cm1.campione_id
+              INNER JOIN campione AS cm2
+                ON res2.campione_id = cm2.campione_id
+              INNER JOIN pianificazione AS pl
+                ON rip.pianificazione_id = pl.pianificazione_id
+              INNER JOIN metodo AS met
+                ON pl.metodo_id = met.metodo_id
+              WHERE met.metodo_id = {methodid} AND
+                    par.parametro_id = {paramid};",
+                            .con = conn)
+
+  pool::dbGetQuery(conn, myquery) |>
+    unlist() |>
+    unname()
+}
+
+#' SQL query for getting the value from a column in a table
+#'
+#' @description retrieve a value from a table given the table name and the column name.
+#' @param conn a connection to a database obtained by pool::dbConnect.
+#' @param tablename the name of the table.
+#' @param columname the name of the column with the desired value.
+#' @param condcol the name of the column on which a condition must be satisfied.
+#' @param condval the value of the condition to be satisfied.
+#' @return a data.table
+#'
+#' @noRd
+#' @importFrom DBI dbGetQuery
+#' @importFrom glue glue_sql
+sql_get_value <- function(conn, tablename, columname, condcol, condval){
+  stopifnot(is.character(tablename))
+  stopifnot(is.character(columname))
+  stopifnot(is.character(condcol))
+
+  myquery <- glue::glue_sql(
+              "SELECT {`columname`}
+               FROM {`tablename`}
+               WHERE {`condcol`} = {`condval`};",
+    .con = conn)
+
+  pool::dbGetQuery(conn, myquery) |>
+    unlist() |>
+    unname()
+}

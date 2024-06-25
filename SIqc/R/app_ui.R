@@ -23,8 +23,16 @@ app_ui <- function(request) {
       lang = "it",
 
       # Navbar items ----
-      bslib::nav_panel("Attività", value = "tasks", mod_01_plan_ui("tasks")),
-      bslib::nav_panel("Risultati", value = "results", ""),
+      bslib::nav_panel("Attività",
+                       value = "tasks",
+                       mod_01_plan_ui("tasks")),
+      bslib::nav_menu("Risultati",
+                      align = "right",
+                      bslib::nav_panel("Ripetibilità",
+                                       value = "repeatability",
+                                       mod_02_repeatability_results_ui("repeatability")),
+                      bslib::nav_panel("Giustezza", value = "trueness", ""),
+                      bslib::nav_panel("Proficency test", value = "proficency_test", "")),
       bslib::nav_spacer(),
       bslib::nav_menu("Leggimi",
                       align = "right",

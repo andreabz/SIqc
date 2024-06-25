@@ -22,7 +22,7 @@ attachment::att_amend_desc()
 ## Create a module infrastructure in R/
 golem::add_module(name = "01_plan", with_test = TRUE) # Name of the module
 golem::add_module(name = "011_repeatability", with_test = TRUE) # Name of the module
-golem::add_module(name = "02_results", with_test = TRUE) # Name of the module
+golem::add_module(name = "02_repeatability_results", with_test = TRUE) # Name of the module
 
 ## Add helper functions ----
 ## Creates fct_* and utils_*
