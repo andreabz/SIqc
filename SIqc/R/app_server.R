@@ -17,17 +17,20 @@ app_server <- function(input, output, session) {
   })
 
   r_global <- reactiveValues(
-    conn = conn,
-    taskid = NA,
-    activity = NA,
-    completed = NA,
-    edit_results = 0,
-    dbtrigger = NA
+    conn = conn,           # db connection shared across modules
+    taskid = NA,           # id of the task to be visualised, modified or removed
+    activity = NA,         # activity type
+    completed = NA,        # is the activity completed or not
+    edit_results = 0,      # are results to be modified?
+    dbtrigger = 0          # trigger to refresh db connection
   )
 
   mod_01_plan_server("tasks", r_global)
 
   observeEvent(r_global$edit_results,
+               # very important to avoid the bug of stacked modal dialog
+               once = TRUE,
+               ignoreInit = TRUE,
                {
                  req(!is.na(r_global$activity))
 
@@ -38,9 +41,6 @@ app_server <- function(input, output, session) {
                    "proficency test" = NA
                  )
 
-               },
-               # very important to avoid the bug of stacked modal dialog
-               once = TRUE,
-               ignoreInit = TRUE)
+               })
 
 }
