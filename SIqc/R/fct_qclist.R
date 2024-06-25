@@ -11,10 +11,10 @@ table_btns <- function(x) {
     '<div class = "btn-group">
       <button class="btn btn-default action-button btn-info action_button" id="edit_',
     x,
-    '" type="button" onclick=get_id(this.id)><i class="fas fa-edit"></i></button>
+    '" type="button" onclick=get_id(this.id) title="Visualizza o modifca"><i class="fas fa-edit"></i></button>
       <button class="btn btn-default action-button btn-danger action_button" id="delete_',
     x,
-    '" type="button" onclick=get_id(this.id)><i class="fa fa-trash-alt"></i></button></div>'
+    '" type="button" onclick=get_id(this.id) title="Elimina"><i class="fa fa-trash-alt"></i></button></div>'
   )
 }
 
@@ -85,7 +85,7 @@ prepare_tasks_summary <- function(df) {
 #' @param id id for namespace.
 #' @return a single row dataframe.
 #' @importFrom shiny NS
-modal_dialog <- function(df, edit, completed, conn, id) {
+task_dialog <- function(df, edit, completed, conn, id) {
   stopifnot(is.data.frame(df))
   stopifnot(
     colnames(df) == c(
@@ -281,4 +281,67 @@ qclistDT <- function(data) {
       ))
     )
   )
+}
+
+#' modal dialog for confirming to delete a table row
+#'
+#' @description a modal dialog with a text summary and a yes or no buttons.
+#' @param conn a pool::dbConnect valid connection.
+#' @param id id for namespace.
+#' @return a single row dataframe.
+#' @importFrom shiny NS
+#' @importFrom glue glue
+delete_dialog <- function(conn, id) {
+  ns <- shiny::NS(id)
+
+  shiny::modalDialog(
+    title = "Non potrai tornare indietro",
+    textOutput(ns("delete")),
+    size = "m",
+    easyClose = FALSE,
+    footer = div(
+      class = "d-flex justify-content-end container",
+      div(
+        shiny::actionButton(
+          inputId = ns("del_no"),
+          label = "No",
+          class = "btn-info"
+        )
+      ),
+      div(
+        shiny::actionButton(
+          inputId = ns("del_yes"),
+          label = "Sì",
+          class = "btn-danger"
+        )
+      )
+    )
+  ) |> shiny::showModal()
+}
+
+#' A confirmation text for task removal
+#'
+#' @description a confirmation text for task removal
+#' @param taskid an integer for task identification.
+#' @param completed a logical flag to identify tasks associated to results or not.
+#' @param conn connection to a database.
+#' @return a string of text.
+#' @importFrom glue glue
+delete_txt <- function(taskid, completed, conn) {
+  stopifnot(is.integer(taskid))
+  stopifnot(is.logical(completed))
+
+  if(completed) {
+    worker <- sql_get_acoperator_for_task(conn, taskid)
+    worker_txt <- glue::glue("eseguita da {worker}")
+  } else {
+    worker <- sql_get_ploperator_for_task(conn, taskid)
+    print(taskid)
+    worker_txt <- glue::glue("pianificata da {worker}")
+  }
+
+  method <- sql_get_method_for_task(conn, taskid)
+
+  glue::glue("Confermi di voler cancellare un'attivita {worker_txt} per il metodo {method}?")
+
 }
