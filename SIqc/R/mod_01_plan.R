@@ -44,19 +44,18 @@ mod_01_plan_server <- function(id, r_global) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
-    # a reactive trigger for importing data from db
-    dbtrigger <- makereactivetrigger()
-
     conn <- isolate(r_global$conn)
 
-    input_df <- eventReactive(r_global$dbtrigger, sql_get_task_summary(conn))
+    input_df <- eventReactive(r_global$dbtrigger,
+                              sql_get_task_summary(conn))
 
     r_local <- shiny::reactiveValues(
       df = data.table::data.table(),
       edited_row = NA,
       add_or_edit = NA,
       edit_button = NA,
-      keep_track_id = NA
+      keep_track_id = NA,
+      delete_txt = NA
     )
 
     ##### store the dataset and keep track of the max id value ----
@@ -88,12 +87,37 @@ mod_01_plan_server <- function(id, r_global) {
         paste0("\\b", input$current_id, "\\b")
       )), id]
 
+      # was the task completed?
+      r_global$completed <- sql_is_task_completed(conn, r_global$taskid)
+
+      r_local$delete_txt <- delete_txt(taskid = r_global$taskid,
+                                       completed = r_global$completed,
+                                       conn = conn)
+      # confirmation modal dialog
+      delete_dialog(conn = conn,
+                    id = id)
+    })
+
+    # confirmation text string
+    output$delete <- renderText({
+      r_local$delete_txt
+
+    })
+
+    # delete confirmed
+    observeEvent(input$del_yes, {
       sql_del_taskid(conn, "pianificazione", "pianificazione_id", r_global$taskid)
       sql_del_taskid(conn, "pianificazione_campione", "pianificazione_id", r_global$taskid)
       sql_del_taskid(conn, "ripetibilita", "pianificazione_id", r_global$taskid)
       sql_del_taskid(conn, "giudizio", "pianificazione_id", r_global$taskid)
       # update data from db
-      r_global$dbtrigger <- dbtrigger$trigger()
+      r_global$dbtrigger <- r_global$dbtrigger + 1
+      shiny::removeModal()
+    })
+
+    # delete not confirmed
+    observeEvent(input$del_no, {
+      shiny::removeModal()
     })
 
     ##### edit a row ----
@@ -119,7 +143,7 @@ mod_01_plan_server <- function(id, r_global) {
       r_global$completed <- sql_is_task_completed(conn, r_global$taskid)
       r_global$activity <- sql_get_activity_for_task(conn, r_global$taskid)
 
-      modal_dialog(
+      task_dialog(
         r_local$edited_row,
         edit = TRUE,
         completed = r_global$completed,
@@ -155,7 +179,7 @@ mod_01_plan_server <- function(id, r_global) {
 
       sql_mod_taskid(conn, r_local$edited_row, r_global$taskid)
       # update data from db
-      r_global$dbtrigger <- dbtrigger$trigger()
+      r_global$dbtrigger <- r_global$dbtrigger + 1
       shiny::removeModal()
     })
 
@@ -170,7 +194,7 @@ mod_01_plan_server <- function(id, r_global) {
         operatore_previsto = NA
       )
 
-      modal_dialog(
+      task_dialog(
         empty_row,
         edit = FALSE,
         completed = FALSE,
@@ -198,14 +222,14 @@ mod_01_plan_server <- function(id, r_global) {
       )
 
       sql_add_task(conn, add_row)
-      r_global$dbtrigger <- dbtrigger$trigger()
+      r_global$dbtrigger <- r_global$dbtrigger + 1
 
       shiny::removeModal()
     })
 
     ##### add data ----
     shiny::observeEvent(input$add_data, {
-      r_global$edit_results <- isolate(r_global$edit_results + 1)
+      r_global$edit_results <- r_global$edit_results + 1
       shiny::removeModal()
     })
 

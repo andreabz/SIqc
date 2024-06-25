@@ -775,3 +775,76 @@ sql_is_task_completed <- function(conn, taskid){
 
   ifelse(length(esito_id) == 0, FALSE, TRUE)
 }
+
+#' SQL query for getting the method associated to a task
+#'
+#' @description retrieve the method associated to a task id.
+#' @param conn a connection to a database obtained by pool::dbConnect.
+#' @param taskid the id of the element for which the id is to be retrieved.
+#' @return a character
+#'
+#' @noRd
+#' @importFrom DBI dbGetQuery
+#' @importFrom glue glue_sql
+sql_get_method_for_task <- function(conn, taskid){
+
+  myquery <- glue::glue_sql("SELECT metodo
+                             FROM pianificazione AS pl
+                             INNER JOIN metodo AS mt
+                             ON pl.metodo_id = mt.metodo_id
+                             WHERE pianificazione_id = {taskid};",
+                            .con = conn)
+
+  pool::dbGetQuery(conn, myquery) |>
+    unlist() |>
+    unname()
+}
+
+#' SQL query for getting the planned operator associated to a task
+#'
+#' @description retrieve the planned operator associated to a task id.
+#' @param conn a connection to a database obtained by pool::dbConnect.
+#' @param taskid the id of the element for which the id is to be retrieved.
+#' @return a character
+#'
+#' @noRd
+#' @importFrom DBI dbGetQuery
+#' @importFrom glue glue_sql
+sql_get_ploperator_for_task <- function(conn, taskid){
+
+  myquery <- glue::glue_sql("SELECT operatore_previsto
+                             FROM pianificazione
+                             WHERE pianificazione_id = {taskid};",
+                            .con = conn)
+
+  pool::dbGetQuery(conn, myquery) |>
+    unlist() |>
+    unname()
+}
+
+#' SQL query for getting the actual operator associated to a task
+#'
+#' @description retrieve the actual operator associated to a task id.
+#' @param conn a connection to a database obtained by pool::dbConnect.
+#' @param taskid the id of the element for which the id is to be retrieved.
+#' @return a character
+#'
+#' @noRd
+#' @importFrom DBI dbGetQuery
+#' @importFrom glue glue_sql
+sql_get_acoperator_for_task <- function(conn, taskid){
+
+  myquery <- glue::glue_sql("SELECT DISTINCT
+                              operatore_effettivo
+                             FROM pianificazione AS pl
+                             INNER JOIN pianificazione_campione AS pc
+                              ON pl.pianificazione_id = pc.pianificazione_id
+                             INNER JOIN risultato AS rs
+                              ON pc.campione_id = rs.campione_id
+                             WHERE pl.pianificazione_id = {taskid};",
+                            .con = conn)
+
+  pool::dbGetQuery(conn, myquery) |>
+    unlist() |>
+    unname()
+}
