@@ -23,7 +23,7 @@ mod_02_repeatability_results_ui <- function(id) {
         shiny::selectInput(
           inputId = ns("method"),
           label = "Metodo",
-          choices = sql_get_list(conn, "metodo")
+          choices = NULL
         )
       ),
       div(
@@ -79,6 +79,8 @@ mod_02_repeatability_results_server <- function(id, r_global) {
   moduleServer(id, function(input, output, session) {
     ns <- session$ns
 
+    conn <- isolate(r_global$conn)
+
     r_local <- reactiveValues(
       methodname = NA,
       methodid = NA,
@@ -87,6 +89,12 @@ mod_02_repeatability_results_server <- function(id, r_global) {
       data = data.table::data.table(),
       title = NA
     )
+
+    observeEvent(r_global$conn, {
+      methods <- sql_get_list(conn, "metodo")
+      freezeReactiveValue(input, "method")
+      updateSelectInput(inputId = "method", choices = methods)
+    })
 
     observeEvent(input$method, {
       # save the method name and id
