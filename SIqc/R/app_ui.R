@@ -30,7 +30,7 @@ app_ui <- function(request) {
                       align = "right",
                       bslib::nav_panel("Ripetibilità",
                                        value = "repeatability",
-                                       mod_02_repeatability_results_ui("repeatability")),
+                                       mod_02_repeatability_results_ui("repdata")),
                       bslib::nav_panel("Giustezza", value = "trueness", ""),
                       bslib::nav_panel("Proficency test", value = "proficency_test", "")),
       bslib::nav_spacer(),
@@ -67,6 +67,7 @@ golem_add_external_resources <- function() {
       path = app_sys("app/www"),
       app_title = "SIqc"
     ),
-    shinyjs::useShinyjs()
+    shinyjs::useShinyjs(),
+    withMathJax()
   )
 }

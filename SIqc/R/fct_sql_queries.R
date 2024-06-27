@@ -873,6 +873,7 @@ sql_get_repeatability_for_method_parameter <- function(conn, methodid, paramid){
                 met.metodo,
                 cm1.campione AS campione1,
                 cm2.campione AS campione2,
+                res1.data_effettiva,
                 res1.operatore_effettivo,
                 par.parametro,
                 udm.unita_misura,
@@ -907,8 +908,7 @@ sql_get_repeatability_for_method_parameter <- function(conn, methodid, paramid){
                             .con = conn)
 
   pool::dbGetQuery(conn, myquery) |>
-    unlist() |>
-    unname()
+    data.table::data.table()
 }
 
 #' SQL query for getting the value from a column in a table
@@ -932,7 +932,7 @@ sql_get_value <- function(conn, tablename, columname, condcol, condval){
   myquery <- glue::glue_sql(
               "SELECT {`columname`}
                FROM {`tablename`}
-               WHERE {`condcol`} = {`condval`};",
+               WHERE {`condcol`} = {condval};",
     .con = conn)
 
   pool::dbGetQuery(conn, myquery) |>

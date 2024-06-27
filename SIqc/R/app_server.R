@@ -43,4 +43,6 @@ app_server <- function(input, output, session) {
 
                })
 
+  mod_02_repeatability_results_server("repdata", r_global)
+
 }

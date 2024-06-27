@@ -66,3 +66,23 @@ makereactivetrigger <- function() {
     }
   )
 }
+
+#' A horizontal line for plotly plots
+#' @description A horizontal line for plotly plots.
+#' @param y value at which the horizontal line is to be plotted.
+#'
+#' @return a function.
+#'
+#' @noRd
+
+hline <- function(y = 0, color = "#ff0039") {
+  list(
+    type = "line",
+    x0 = 0,
+    x1 = 1,
+    xref = "paper",
+    y0 = y,
+    y1 = y,
+    line = list(color = color)
+  )
+}
