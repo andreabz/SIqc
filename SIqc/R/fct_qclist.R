@@ -336,7 +336,6 @@ delete_txt <- function(taskid, completed, conn) {
     worker_txt <- glue::glue("eseguita da {worker}")
   } else {
     worker <- sql_get_ploperator_for_task(conn, taskid)
-    print(taskid)
     worker_txt <- glue::glue("pianificata da {worker}")
   }
 
