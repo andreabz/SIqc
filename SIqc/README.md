@@ -4,49 +4,27 @@
 # SIqc
 
 <!-- badges: start -->
+
+[![Lifecycle:
+experimental](https://img.shields.io/badge/lifecycle-experimental-orange.svg)](https://lifecycle.r-lib.org/articles/stages.html#experimental)
+
 <!-- badges: end -->
 
-The goal of SIqc is to …
+The goal of SIqc is to provide a simple database frontend for planning
+QC tasks and inspect their results.
 
-## Installation
+# Cose da fare
 
-You can install the development version of SIqc from
-[GitHub](https://github.com/) with:
+SIqc è ancora un software in sviluppo: bisogna sviluppare un modulo per
+l’inserimento e visualizzazione dei risultati relativi alle prove di
+giustezza e proficency test.
 
-``` r
-# install.packages("devtools")
-devtools::install_github("andreabz/SIqc")
-```
+# Cose su cui riflettere con i colleghi
 
-## Example
-
-This is a basic example which shows you how to solve a common problem:
-
-``` r
-library(SIqc)
-## basic example code
-```
-
-What is special about using `README.Rmd` instead of just `README.md`?
-You can include R chunks like so:
-
-``` r
-summary(cars)
-#>      speed           dist       
-#>  Min.   : 4.0   Min.   :  2.00  
-#>  1st Qu.:12.0   1st Qu.: 26.00  
-#>  Median :15.0   Median : 36.00  
-#>  Mean   :15.4   Mean   : 42.98  
-#>  3rd Qu.:19.0   3rd Qu.: 56.00  
-#>  Max.   :25.0   Max.   :120.00
-```
-
-You’ll still need to render `README.Rmd` regularly, to keep `README.md`
-up-to-date. `devtools::build_readme()` is handy for this.
-
-You can also embed plots, for example:
-
-<img src="man/figures/README-pressure-1.png" width="100%" />
-
-In that case, don’t forget to commit and push the resulting figure
-files, so they display on GitHub and CRAN.
+- Possibilità di ottenere i requisiti delle prove in modo automatico;
+- organizzazione generale del database per minimizzare le operazioni di
+  scrittura;
+- utilizzo di UUID come chiave primaria delle tabelle, così da evitare
+  problemi in caso di scritture simultanee da parte di più utenti;
+- database clone di quello di produzione per testare le funzioni e le
+  query.
